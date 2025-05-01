@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Checker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-6">
+    <div class="w-full max-w-2xl bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+        <h1 class="text-4xl font-bold text-indigo-400 mb-6">AI Image Checker</h1>
+        <p class="text-gray-300 text-lg mb-4">Upload an image to analyze using AI.</p>
+
+        <form action="/" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <label for="imageUpload" class="block w-full bg-gray-700 text-gray-300 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition-all text-lg font-semibold">
+                Click to Upload an Image
+                <input type="file" name="image" id="imageUpload" class="hidden" required>
+            </label>
+            <div id="previewContainer" class="hidden mt-4">
+                <h2 class="text-xl text-indigo-300 font-semibold">Preview:</h2>
+                <img id="previewImage" class="w-full max-h-96 object-contain border-2 border-gray-700 rounded-lg mt-3">
+            </div>
+            <button type="submit" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-all">
+                Upload & Check
+            </button>
+        </form>
+
+        {% if uploaded_image %}
+        <div class="mt-6">
+            <h2 class="text-2xl text-indigo-400 font-bold">Uploaded Image:</h2>
+            <img src="{{ url_for('static', filename='uploads/' + uploaded_image) }}" alt="Uploaded Image" class="w-full max-h-96 object-contain border-2 border-gray-700 rounded-lg mt-3">
+            
+            <h3 class="text-xl font-semibold text-green-400 mt-4">{{ result }}</h3>
+            <p class="text-gray-300 text-lg">{{ image_status }}</p>
+            <p class="text-blue-400 text-lg">{{ helmet_status }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        document.getElementById('imageUpload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImage').src = e.target.result;
+                    document.getElementById('previewContainer').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>

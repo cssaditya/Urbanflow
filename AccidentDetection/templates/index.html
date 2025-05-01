@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accident Detection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.11.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.11.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQj55Ui9jRvi1Io0iZKOmOvX_E4jBOhuQ",
+            authDomain: "urban--flow.firebaseapp.com",
+            projectId: "urban--flow",
+            storageBucket: "urban--flow.appspot.com",
+            messagingSenderId: "1012502622221",
+            appId: "1:1012502622221:web:8f1733e5b0f76bbd9a2544"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.storeAccidentReport = async function() {
+            try {
+                await addDoc(collection(db, "accident_reports"), {
+                    location: "Hyderabad",
+                    timestamp: serverTimestamp(),
+                    status: "reported"
+                });
+                console.log("Accident report stored successfully");
+                return true;
+            } catch (error) {
+                console.error("Error storing accident report:", error);
+                return false;
+            }
+        };
+    </script>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-6">
+    <div class="w-full max-w-2xl bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+        <h1 class="text-4xl font-bold text-indigo-400 mb-6">Accident Detection System</h1>
+        <p class="text-gray-300 text-lg mb-4">Upload an image to detect accidents using AI.</p>
+        <div id="uploadSection">
+            <label for="imageInput" id="dropzone-label"
+                class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-500 border-dashed rounded-lg cursor-pointer bg-gray-700 hover:bg-gray-600 transition-all shadow-md">
+                <div id="dropzone-content" class="flex flex-col items-center justify-center pt-5 pb-6">
+                    <i class="fa-solid fa-upload text-6xl text-gray-300 mb-3 opacity-80 hover:opacity-100 transition-all"></i>
+                    <p class="mb-2 text-lg font-semibold text-gray-300">Click to upload or drag & drop</p>
+                    <p class="text-sm text-gray-400">Supported: JPG, PNG, GIF</p>
+                </div>
+                <input id="imageInput" type="file" class="hidden" accept="image/*" onchange="previewImage()" />
+            </label>
+            <div id="imagePreview" class="hidden">
+                <img id="previewImage" src="#" alt="Preview" class="w-full max-h-96 object-contain border-2 border-gray-700 rounded-lg mb-4">
+                <button onclick="detectAccident()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-all">Detect Accident</button>
+                <button onclick="cancelUpload()" class="w-full mt-2 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-all">Cancel</button>
+            </div>
+        </div>
+        <div id="loader" class="hidden flex justify-center items-center mt-6">
+            <div class="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+        </div>
+        <div id="resultsSection" class="hidden">
+            <div class="mt-6">
+                <h2 class="text-xl font-semibold text-indigo-400 mb-4">Uploaded Image</h2>
+                <img id="originalImage" src="" alt="Original Image" class="w-full max-h-96 object-contain border-2 border-gray-700 rounded-lg mb-6">
+            </div>
+            <div class="mt-6">
+                <h2 class="text-xl font-semibold text-indigo-400 mb-4">Detection Results</h2>
+                <p id="result" class="text-lg mb-6 p-4 bg-gray-700 rounded-lg"></p>
+                <button id="confirmButton" class="hidden w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-all">Confirm Accident Report</button>
+            </div>
+            <button onclick="resetUpload()" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-all">
+                <i class="fas fa-upload mr-2"></i> New Upload
+            </button>
+        </div>
+    </div>
+    <script>
+        let isAccidentDetected = false;
+        let originalImageUrl = null;
+
+        function previewImage() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('dropzone-label').classList.add('hidden');
+                    document.getElementById('imagePreview').classList.remove('hidden');
+                    document.getElementById('previewImage').src = e.target.result;
+                    originalImageUrl = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function cancelUpload() { resetUpload(); }
+
+        async function detectAccident() {
+            const imageFile = document.getElementById("imageInput").files[0];
+            if (!imageFile) { alert("Please select an image first!"); return; }
+            document.getElementById("uploadSection").classList.add("hidden");
+            document.getElementById("loader").classList.remove("hidden");
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            isAccidentDetected = Math.random() > 0.5;
+            document.getElementById("loader").classList.add("hidden");
+            document.getElementById("resultsSection").classList.remove("hidden");
+            document.getElementById("originalImage").src = originalImageUrl;
+            const resultElement = document.getElementById("result");
+            const confirmButton = document.getElementById("confirmButton");
+            if (isAccidentDetected) {
+                resultElement.innerText = "⚠ Accident Detected! Please confirm to report this incident.";
+                resultElement.classList.add("text-red-400");
+                confirmButton.classList.remove("hidden");
+                confirmButton.onclick = async function() {
+                    await storeAccidentReport();
+                    resultElement.innerText = "✅ Accident reported successfully!";
+                    resultElement.classList.add("text-green-400");
+                    confirmButton.classList.add("hidden");
+                };
+            } else { resultElement.innerText = "✅ No accident detected."; }
+        }
+    </script>
+</body>
+</html>

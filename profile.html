@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanFlow | Officer Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        
+        .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+        }
+        
+        .nav-glass {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, #48CAE4, #3A86FF);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .btn-glow:hover {
+            box-shadow: 0 0 15px #3A86FF;
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .profile-header {
+            background: linear-gradient(135deg, #1e3a8a, #0f172a);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(58, 134, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(58, 134, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(58, 134, 255, 0); }
+        }
+        
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.5s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Particle.js Background -->
+    <div id="particles-js"></div>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
+        <div class="flex flex-col items-center">
+            <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-blue-400 text-lg">Loading Officer Profile...</p>
+        </div>
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="nav-glass fixed top-0 left-0 right-0 z-40 py-4 px-6 shadow-lg">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-traffic-light text-blue-400 text-2xl"></i>
+                <h1 class="text-2xl font-bold gradient-text">UrbanFlow</h1>
+            </div>
+            
+            <div class="hidden md:flex space-x-8">
+                <a href="index.html" class="text-blue-200 hover:text-white transition-colors">
+                    <i class="fas fa-home mr-2"></i> Dashboard
+                </a>
+                <a href="alerts.html" class="text-blue-200 hover:text-white transition-colors">
+                    <i class="fas fa-bell mr-2"></i> Alerts
+                </a>
+                <a href="reports.html" class="text-blue-200 hover:text-white transition-colors">
+                    <i class="fas fa-file-alt mr-2"></i> Reports
+                </a>
+                <a href="#" class="text-white">
+                    <i class="fas fa-user mr-2"></i> Profile
+                </a>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg flex items-center btn-glow transition-all">
+                        <i class="fas fa-plus mr-2"></i> New Report
+                    </button>
+                </div>
+                <div class="relative">
+                    <img id="profileImage" src="./images/policeicon.png"
+                         alt="Profile" class="w-10 h-10 rounded-full cursor-pointer border-2 border-blue-400">
+                    
+                    <div id="dropdownMenu" class="absolute right-0 mt-2 w-48 bg-slate-800 rounded-lg shadow-xl py-2 hidden">
+                        <a href="#" class="block px-4 py-2 text-blue-200 hover:bg-slate-700">Profile</a>
+                        <a href="#" class="block px-4 py-2 text-blue-200 hover:bg-slate-700">Settings</a>
+                        <a href="#" id="logout-btn" class="block px-4 py-2 text-red-400 hover:bg-slate-700">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="pt-24 pb-12 px-6 max-w-7xl mx-auto">
+        <!-- Profile Header -->
+        <div class="profile-header rounded-xl p-8 mb-8 slide-in" style="animation-delay: 0.1s;">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="relative mb-6 md:mb-0 md:mr-8">
+                    <img src="./images/policeicon.png" alt="Officer" class="w-32 h-32 rounded-full border-4 border-blue-400">
+                    <div class="absolute bottom-0 right-0 bg-blue-600 rounded-full p-2 pulse-animation">
+                        <i class="fas fa-shield-alt text-white"></i>
+                    </div>
+                </div>
+                <div class="text-center md:text-left">
+                    <h1 class="text-3xl font-bold mb-1">Officer James Wilson</h1>
+                    <p class="text-blue-200 mb-3">Traffic Police Department | Badge #TPD-4572</p>
+                    <div class="flex flex-wrap justify-center md:justify-start gap-2">
+                        <span class="bg-blue-600/20 text-blue-400 px-3 py-1 rounded-full text-sm">Senior Officer</span>
+                        <span class="bg-green-600/20 text-green-400 px-3 py-1 rounded-full text-sm">5 Years Service</span>
+                        <span class="bg-yellow-600/20 text-yellow-400 px-3 py-1 rounded-full text-sm">District 4</span>
+                    </div>
+                </div>
+                <div class="ml-auto hidden md:block">
+                    <button class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg flex items-center btn-glow transition-all">
+                        <i class="fas fa-edit mr-2"></i> Edit Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats and Performance -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Performance Stats -->
+            <div class="glass-card rounded-xl p-6 slide-in" style="animation-delay: 0.2s;">
+                <h2 class="text-xl font-bold mb-4">Performance Metrics</h2>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-blue-200">Response Time</span>
+                            <span class="font-semibold">4.2m</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: 85%"></div>
+                        </div>
+                        <p class="text-xs text-blue-200 mt-1">Faster than 92% of officers</p>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-blue-200">Cases Resolved</span>
+                            <span class="font-semibold">78%</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: 78%"></div>
+                        </div>
+                        <p class="text-xs text-blue-200 mt-1">Above department average</p>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-blue-200">Violations Issued</span>
+                            <span class="font-semibold">142</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-2">
+                            <div class="bg-yellow-500 h-2 rounded-full" style="width: 65%"></div>
+                        </div>
+                        <p class="text-xs text-blue-200 mt-1">This month</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Activity Overview -->
+            <div class="glass-card rounded-xl p-6 slide-in" style="animation-delay: 0.3s;">
+                <h2 class="text-xl font-bold mb-4">Activity Overview</h2>
+                <div class="h-48">
+                    <canvas id="activityChart"></canvas>
+                </div>
+                <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+                    <div>
+                        <p class="text-2xl font-bold text-green-400">24</p>
+                        <p class="text-xs text-blue-200">Resolved Today</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-blue-400">8</p>
+                        <p class="text-xs text-blue-200">In Progress</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-yellow-400">3</p>
+                        <p class="text-xs text-blue-200">Pending Review</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Achievements -->
+            <div class="glass-card rounded-xl p-6 slide-in" style="animation-delay: 0.4s;">
+                <h2 class="text-xl font-bold mb-4">Recent Achievements</h2>
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="bg-yellow-600/20 p-2 rounded-full mr-3">
+                            <i class="fas fa-medal text-yellow-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">Officer of the Month</h3>
+                            <p class="text-sm text-blue-200">June 2023</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="bg-blue-600/20 p-2 rounded-full mr-3">
+                            <i class="fas fa-trophy text-blue-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">Fastest Response Award</h3>
+                            <p class="text-sm text-blue-200">Q2 2023</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="bg-green-600/20 p-2 rounded-full mr-3">
+                            <i class="fas fa-star text-green-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">Community Service Recognition</h3>
+                            <p class="text-sm text-blue-200">May 2023</p>
+                        </div>
+                    </div>
+                </div>
+                <button class="w-full mt-4 bg-slate-700 hover:bg-slate-600 py-2 rounded-lg transition-all">
+                    View All Achievements
+                </button>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="glass-card rounded-xl p-6 mb-8 slide-in" style="animation-delay: 0.5s;">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Recent Activity</h2>
+                <button class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg text-sm btn-glow">View All</button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-start p-3 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors">
+                    <div class="bg-green-600/20 p-2 rounded-full mr-4">
+                        <i class="fas fa-check-circle text-green-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold">Case #TR-2023-0457 resolved</h3>
+                        <p class="text-sm text-blue-200">Speeding violation on Main Street</p>
+                        <div class="mt-2 flex items-center text-sm">
+                            <span class="bg-slate-700 text-blue-200 px-2 py-1 rounded mr-2">Closed</span>
+                            <span class="text-blue-200">Fine issued: ₹1500</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-blue-200">30 mins ago</div>
+                    </div>
+                </div>
+                
+                <div class="flex items-start p-3 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors">
+                    <div class="bg-blue-600/20 p-2 rounded-full mr-4">
+                        <i class="fas fa-car text-blue-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold">New violation recorded</h3>
+                        <p class="text-sm text-blue-200">Red light violation at Elm & 5th</p>
+                        <div class="mt-2 flex items-center text-sm">
+                            <span class="bg-slate-700 text-blue-200 px-2 py-1 rounded mr-2">Processing</span>
+                            <span class="text-blue-200">Vehicle: KA-05-MH-1234</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-blue-200">2 hours ago</div>
+                    </div>
+                </div>
+                
+                <div class="flex items-start p-3 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors">
+                    <div class="bg-red-600/20 p-2 rounded-full mr-4">
+                        <i class="fas fa-car-crash text-red-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold">Accident report filed</h3>
+                        <p class="text-sm text-blue-200">2-vehicle collision on Highway 45</p>
+                        <div class="mt-2 flex items-center text-sm">
+                            <span class="bg-slate-700 text-blue-200 px-2 py-1 rounded mr-2">Investigation</span>
+                            <span class="text-blue-200">Minor injuries reported</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-blue-200">5 hours ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Equipment and Tools -->
+        <div class="glass-card rounded-xl p-6 slide-in" style="animation-delay: 0.6s;">
+            <h2 class="text-xl font-bold mb-4">Assigned Equipment</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors">
+                    <div class="flex items-center mb-2">
+                        <div class="bg-blue-600/20 p-2 rounded-full mr-3">
+                            <i class="fas fa-car text-blue-400"></i>
+                        </div>
+                        <h3 class="font-semibold">Patrol Vehicle #T-457</h3>
+                    </div>
+                    <p class="text-sm text-blue-200 mb-3">Toyota Innova | 2022 Model</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-green-600/20 text-green-400 px-2 py-1 rounded text-xs">Active</span>
+                        <span class="bg-slate-700 text-blue-200 px-2 py-1 rounded text-xs">GPS Equipped</span>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors">
+                    <div class="flex items-center mb-2">
+                        <div class="bg-blue-600/20 p-2 rounded-full mr-3">
+                            <i class="fas fa-tablet-alt text-blue-400"></i>
+                        </div>
+                        <h3 class="font-semibold">Traffic Tablet #TT-89</h3>
+                    </div>
+                    <p class="text-sm text-blue-200 mb-3">Samsung Galaxy Tab S7 | UrbanFlow OS</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-green-600/20 text-green-400 px-2 py-1 rounded text-xs">Online</span>
+                        <span class="bg-slate-700 text-blue-200 px-2 py-1 rounded text-xs">4G Connected</span>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors">
+                    <div class="flex items-center mb-2">
+                        <div class="bg-blue-600/20 p-2 rounded-full mr-3">
+                            <i class="fas fa-camera text-blue-400"></i>
+                        </div>
+                        <h3 class="font-semibold">Body Camera #BC-32</h3>
+                    </div>
+                    <p class="text-sm text-blue-200 mb-3">Axon Body 3 | 1080p Recording</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-yellow-600/20 text-yellow-400 px-2 py-1 rounded text-xs">Battery: 78%</span>
+                        <span class="bg-slate-700 text-blue-200 px-2 py-1 rounded text-xs">64GB Storage</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-slate-900/80 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center space-x-2 mb-4 md:mb-0">
+                    <i class="fas fa-traffic-light text-blue-400"></i>
+                    <span class="text-lg font-bold">UrbanFlow</span>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-blue-200 hover:text-white">About</a>
+                    <a href="#" class="text-blue-200 hover:text-white">Services</a>
+                    <a href="#" class="text-blue-200 hover:text-white">Contact</a>
+                    <a href="#" class="text-blue-200 hover:text-white">Privacy</a>
+                </div>
+                <div class="mt-4 md:mt-0 text-sm text-blue-200">
+                    &copy; 2024 UrbanFlow. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Hide loading screen after 2 seconds (simulate loading)
+        setTimeout(() => {
+            document.getElementById('loading-screen').classList.add('hidden');
+            
+            // Initialize particles.js
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": {
+                        "value": 80,
+                        "density": {
+                            "enable": true,
+                            "value_area": 800
+                        }
+                    },
+                    "color": {
+                        "value": "#3b82f6"
+                    },
+                    "shape": {
+                        "type": "circle",
+                        "stroke": {
+                            "width": 0,
+                            "color": "#000000"
+                        },
+                        "polygon": {
+                            "nb_sides": 5
+                        }
+                    },
+                    "opacity": {
+                        "value": 0.3,
+                        "random": false,
+                        "anim": {
+                            "enable": false,
+                            "speed": 1,
+                            "opacity_min": 0.1,
+                            "sync": false
+                        }
+                    },
+                    "size": {
+                        "value": 3,
+                        "random": true,
+                        "anim": {
+                            "enable": false,
+                            "speed": 40,
+                            "size_min": 0.1,
+                            "sync": false
+                        }
+                    },
+                    "line_linked": {
+                        "enable": true,
+                        "distance": 150,
+                        "color": "#3b82f6",
+                        "opacity": 0.2,
+                        "width": 1
+                    },
+                    "move": {
+                        "enable": true,
+                        "speed": 2,
+                        "direction": "none",
+                        "random": false,
+                        "straight": false,
+                        "out_mode": "out",
+                        "bounce": false,
+                        "attract": {
+                            "enable": false,
+                            "rotateX": 600,
+                            "rotateY": 1200
+                        }
+                    }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": {
+                        "onhover": {
+                            "enable": true,
+                            "mode": "grab"
+                        },
+                        "onclick": {
+                            "enable": true,
+                            "mode": "push"
+                        },
+                        "resize": true
+                    },
+                    "modes": {
+                        "grab": {
+                            "distance": 140,
+                            "line_linked": {
+                                "opacity": 1
+                            }
+                        },
+                        "bubble": {
+                            "distance": 400,
+                            "size": 40,
+                            "duration": 2,
+                            "opacity": 8,
+                            "speed": 3
+                        },
+                        "repulse": {
+                            "distance": 200,
+                            "duration": 0.4
+                        },
+                        "push": {
+                            "particles_nb": 4
+                        },
+                        "remove": {
+                            "particles_nb": 2
+                        }
+                    }
+                },
+                "retina_detect": true
+            });
+            
+            // Initialize charts
+            const activityCtx = document.getElementById('activityChart').getContext('2d');
+            new Chart(activityCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        {
+                            label: 'Violations Issued',
+                            data: [12, 19, 15, 22, 18, 10, 7],
+                            backgroundColor: '#3a86ff',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Cases Resolved',
+                            data: [8, 12, 10, 15, 14, 5, 3],
+                            backgroundColor: '#06d6a0',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#e2e8f0'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            },
+                            stacked: true
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            },
+                            stacked: true
+                        }
+                    }
+                }
+            });
+            
+            // Animate elements on page load
+            const elements = document.querySelectorAll('.slide-in');
+            elements.forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.1}s`;
+            });
+            
+        }, 2000);
+    </script>
+    <script>
+        const profileImage = document.getElementById("profileImage");
+        const dropdownMenu = document.getElementById("dropdownMenu");
+    
+        profileImage.addEventListener("click", (event) => {
+            event.stopPropagation();
+            dropdownMenu.classList.toggle("hidden");
+        });
+    
+        document.addEventListener("click", (event) => {
+            if (!profileImage.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                dropdownMenu.classList.add("hidden");
+            }
+        });
+    </script>
+        <script type="module">
+            import { 
+                initializeApp 
+            } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+            import { 
+                getAuth, 
+                signInWithEmailAndPassword, 
+                createUserWithEmailAndPassword, 
+                GoogleAuthProvider, 
+                signInWithPopup, 
+                setPersistence, 
+                browserLocalPersistence, 
+                browserSessionPersistence, 
+                sendPasswordResetEmail, 
+                onAuthStateChanged, 
+                signOut
+            } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
+            import { 
+                getFirestore, 
+                setDoc, 
+                doc, 
+                getDoc, 
+                serverTimestamp 
+            } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
+        
+            // ✅ Firebase Configuration
+            const firebaseConfig = {
+                apiKey: "AIzaSyCqlFmhCS5pZ3siwhLqVJmVSuio9ZmZBik",
+                authDomain: "urban-flow123.firebaseapp.com",
+                projectId: "urban-flow123",
+                storageBucket: "urban-flow123.firebasestorage.app",
+                messagingSenderId: "441423258690",
+                appId: "1:441423258690:web:7a67abdb55f16c33ecf9db"
+            };
+        
+            // ✅ Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            const provider = new GoogleAuthProvider();
+            document.getElementById('logout-btn')?.addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    await signOut(auth);
+                    alert("Logged out successfully!");
+                    window.location.href = "../login.html"; // Redirect to login page after logout
+                } catch (error) {
+                    console.error("Logout error:", error.message);
+                }
+            });    
+            </script>
+</body>
+</html>

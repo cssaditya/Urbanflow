@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanFlow | Sign Up</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        
+        .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+        }
+        
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, #48CAE4, #3A86FF);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .btn-glow:hover {
+            box-shadow: 0 0 15px #3A86FF;
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Custom checkbox */
+        .custom-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #334155;
+            border-radius: 4px;
+            background-color: #1e293b;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        
+        .custom-checkbox:checked {
+            background-color: #3A86FF;
+            border-color: #3A86FF;
+        }
+        
+        .custom-checkbox:checked::after {
+            content: '\2713';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            min-width: 300px;
+            max-width: 90vw;
+            padding: 16px 24px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .notification.success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(5, 150, 105, 0.9) 100%);
+        }
+        
+        .notification.error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(220, 38, 38, 0.9) 100%);
+        }
+        
+        .notification::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            animation: progressBar 4s linear forwards;
+        }
+        
+        @keyframes progressBar {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        
+        /* Input focus effect */
+        .input-focus:focus {
+            border-color: #3A86FF;
+            box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.3);
+        }
+        
+        /* Password strength meter */
+        .password-strength-meter {
+            height: 4px;
+            background-color: #334155;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .password-strength-meter-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        /* User type selector */
+        .user-type-selector {
+            display: flex;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background-color: #1e293b;
+            margin-bottom: 1.5rem;
+        }
+        
+        .user-type-btn {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .user-type-btn.active {
+            background-color: #1e40af;
+            border-bottom-color: #3b82f6;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .glass-card {
+                width: 90%;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <!-- Particle.js Background -->
+    <div id="particles-js"></div>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
+        <div class="flex flex-col items-center">
+            <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-blue-400 text-lg">Loading UrbanFlow...</p>
+        </div>
+    </div>
+    
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <!-- Signup Container -->
+    <div class="glass-card rounded-xl p-8 w-full max-w-md mx-4 slide-in">
+        <div class="flex flex-col items-center mb-8">
+            <div class="flex items-center space-x-2 mb-4">
+                <i class="fas fa-traffic-light text-blue-400 text-3xl"></i>
+                <h1 class="text-3xl font-bold gradient-text">UrbanFlow</h1>
+            </div>
+            <p class="text-blue-200 text-center">Create your account to access traffic management services</p>
+        </div>
+        
+        <!-- User Type Selector -->
+        <div class="user-type-selector mb-6">
+            <div id="citizen-btn" class="user-type-btn active" onclick="setUserType('citizen')">
+                <i class="fas fa-user mr-2"></i> Citizen
+            </div>
+            <div id="officer-btn" class="user-type-btn" onclick="setUserType('officer')">
+                <i class="fas fa-shield-alt mr-2"></i> Officer
+            </div>
+        </div>
+        
+        <!-- Citizen Signup Form -->
+        <form id="citizen-signup-form" class="space-y-6">
+            <div>
+                <label for="citizen-name" class="block text-sm font-medium text-blue-200 mb-1">Full Name</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-user text-blue-400"></i>
+                    </div>
+                    <input type="text" id="citizen-name" required
+                        class="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200"
+                        placeholder="John Doe">
+                </div>
+            </div>
+            
+            <div>
+                <label for="citizen-email" class="block text-sm font-medium text-blue-200 mb-1">Email</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-envelope text-blue-400"></i>
+                    </div>
+                    <input type="email" id="citizen-email" required
+                        class="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200"
+                        placeholder="your@email.com">
+                </div>
+                <p id="citizen-email-error" class="mt-1 text-sm text-red-400 hidden"></p>
+            </div>
+            
+            <div>
+                <label for="citizen-password" class="block text-sm font-medium text-blue-200 mb-1">Password</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-lock text-blue-400"></i>
+                    </div>
+                    <input type="password" id="citizen-password" required
+                        class="w-full pl-10 pr-10 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200"
+                        placeholder="••••••••">
+                    <button type="button" onclick="togglePassword('citizen-password')"
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-400 hover:text-blue-300 transition duration-200">
+                        <i id="citizen-eye-icon" class="fas fa-eye"></i>
+                        <i id="citizen-eye-slash-icon" class="fas fa-eye-slash hidden"></i>
+                    </button>
+                </div>
+                <div class="password-strength-meter mt-2">
+                    <div id="citizen-password-strength" class="password-strength-meter-fill bg-red-500 w-0"></div>
+                </div>
+                <p id="citizen-password-strength-text" class="text-xs text-blue-300 mt-1">Password strength: <span class="font-medium">Weak</span></p>
+            </div>
+            
+            <div>
+                <label for="citizen-confirm-password" class="block text-sm font-medium text-blue-200 mb-1">Confirm Password</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-lock text-blue-400"></i>
+                    </div>
+                    <input type="password" id="citizen-confirm-password" required
+                        class="w-full pl-10 pr-10 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200"
+                        placeholder="••••••••">
+                    <button type="button" onclick="togglePassword('citizen-confirm-password')"
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-400 hover:text-blue-300 transition duration-200">
+                        <i id="citizen-confirm-eye-icon" class="fas fa-eye"></i>
+                        <i id="citizen-confirm-eye-slash-icon" class="fas fa-eye-slash hidden"></i>
+                    </button>
+                </div>
+                <p id="citizen-confirm-error" class="mt-1 text-sm text-red-400 hidden"></p>
+            </div>
+            
+            <div class="flex items-center">
+                <input type="checkbox" id="citizen-terms" class="custom-checkbox mr-2">
+                <label for="citizen-terms" class="text-sm text-blue-200">
+                    I agree to the <a href="#" class="text-blue-400 hover:text-blue-300">Terms of Service</a> and <a href="#" class="text-blue-400 hover:text-blue-300">Privacy Policy</a>
+                </label>
+            </div>
+            <p id="citizen-terms-error" class="text-sm text-red-400 hidden"></p>
+            
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg btn-glow transition duration-200">
+                Create Citizen Account
+            </button>
+            
+            <div class="text-center text-sm text-blue-200">
+                Already have an account? <a href="login.html" class="text-blue-400 hover:text-blue-300 font-medium transition duration-200">Sign in</a>
+            </div>
+        </form>
+        
+        <!-- Officer Signup Form (Hidden) -->
+        <form id="officer-signup-form" class="space-y-6 hidden">
+            <div>
+                <label for="officer-full-name" class="block text-sm font-medium text-blue-200 mb-1">Full Name</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-user text-blue-400"></i>
+                    </div>
+                    <input type="text" id="officer-full-name" required
+                        class="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200"
+                        placeholder="John Doe">
+                </div>
+            </div>
+            
+            <div>
+                <label for="officer-id-number" class="block text-sm font-medium text-blue-200 mb-1">Officer ID Number</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-id-card text-blue-400"></i>
+                    </div>
+                    <input type="text" id="officer-id-number" required
+                        class="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200"
+                        placeholder="TPD-12345">
+                </div>
+                <p id="officer-id-error" class="mt-1 text-sm text-red-400 hidden"></p>
+            </div>
+            
+            <div>
+                <label for="officer-badge-number" class="block text-sm font-medium text-blue-200 mb-1">Badge Number</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-shield-alt text-blue-400"></i>
+                    </div>
+                    <input type="text" id="officer-badge-number" required
+                        class="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200"
+                        placeholder="4572">
+                </div>
+            </div>
+            
+            <div>
+                <label for="officer-department" class="block text-sm font-medium text-blue-200 mb-1">Department</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-building text-blue-400"></i>
+                    </div>
+                    <select id="officer-department" required
+                        class="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200 appearance-none">
+                        <option value="">Select Department</option>
+                        <option value="traffic">Traffic Police</option>
+                        <option value="patrol">Patrol Division</option>
+                        <option value="highway">Highway Patrol</option>
+                        <option value="special">Special Operations</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <i class="fas fa-chevron-down text-blue-400"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <label for="officer-email" class="block text-sm font-medium text-blue-200 mb-1">Official Email</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-envelope text-blue-400"></i>
+                    </div>
+                    <input type="email" id="officer-email" required
+                        class="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200"
+                        placeholder="john.doe@traffic.gov">
+                </div>
+                <p id="officer-email-error" class="mt-1 text-sm text-red-400 hidden"></p>
+            </div>
+            
+            <div>
+                <label for="officer-password" class="block text-sm font-medium text-blue-200 mb-1">Password</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-lock text-blue-400"></i>
+                    </div>
+                    <input type="password" id="officer-password" required
+                        class="w-full pl-10 pr-10 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200"
+                        placeholder="••••••••">
+                    <button type="button" onclick="togglePassword('officer-password')"
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-400 hover:text-blue-300 transition duration-200">
+                        <i id="officer-signup-eye-icon" class="fas fa-eye"></i>
+                        <i id="officer-signup-eye-slash-icon" class="fas fa-eye-slash hidden"></i>
+                    </button>
+                </div>
+                <div class="password-strength-meter mt-2">
+                    <div id="officer-password-strength" class="password-strength-meter-fill bg-red-500 w-0"></div>
+                </div>
+                <p id="officer-password-strength-text" class="text-xs text-blue-300 mt-1">Password strength: <span class="font-medium">Weak</span></p>
+            </div>
+            
+            <div>
+                <label for="officer-confirm-password" class="block text-sm font-medium text-blue-200 mb-1">Confirm Password</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-lock text-blue-400"></i>
+                    </div>
+                    <input type="password" id="officer-confirm-password" required
+                        class="w-full pl-10 pr-10 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200"
+                        placeholder="••••••••">
+                    <button type="button" onclick="togglePassword('officer-confirm-password')"
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-400 hover:text-blue-300 transition duration-200">
+                        <i id="officer-confirm-eye-icon" class="fas fa-eye"></i>
+                        <i id="officer-confirm-eye-slash-icon" class="fas fa-eye-slash hidden"></i>
+                    </button>
+                </div>
+                <p id="officer-confirm-error" class="mt-1 text-sm text-red-400 hidden"></p>
+            </div>
+            
+            <div class="flex items-center">
+                <input type="checkbox" id="officer-terms" class="custom-checkbox mr-2">
+                <label for="officer-terms" class="text-sm text-blue-200">
+                    I agree to the <a href="#" class="text-blue-400 hover:text-blue-300">Terms of Service</a> and <a href="#" class="text-blue-400 hover:text-blue-300">Privacy Policy</a>
+                </label>
+            </div>
+            <p id="officer-terms-error" class="text-sm text-red-400 hidden"></p>
+            
+            <div class="flex items-center">
+                <input type="checkbox" id="officer-verify" class="custom-checkbox mr-2">
+                <label for="officer-verify" class="text-sm text-blue-200">
+                    I verify that I am an authorized law enforcement officer
+                </label>
+            </div>
+            <p id="officer-verify-error" class="text-sm text-red-400 hidden"></p>
+            
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg btn-glow transition duration-200">
+                Register Officer Account
+            </button>
+            
+            <div class="text-center text-sm text-blue-200">
+                Already have an account? <a href="login.html" class="text-blue-400 hover:text-blue-300 font-medium transition duration-200">Officer Sign in</a>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        // Hide loading screen after 1 second (simulate loading)
+        setTimeout(() => {
+            document.getElementById('loading-screen').classList.add('hidden');
+            
+            // Initialize particles.js
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": {
+                        "value": 80,
+                        "density": {
+                            "enable": true,
+                            "value_area": 800
+                        }
+                    },
+                    "color": {
+                        "value": "#3b82f6"
+                    },
+                    "shape": {
+                        "type": "circle",
+                        "stroke": {
+                            "width": 0,
+                            "color": "#000000"
+                        }
+                    },
+                    "opacity": {
+                        "value": 0.3,
+                        "random": false
+                    },
+                    "size": {
+                        "value": 3,
+                        "random": true
+                    },
+                    "line_linked": {
+                        "enable": true,
+                        "distance": 150,
+                        "color": "#3b82f6",
+                        "opacity": 0.2,
+                        "width": 1
+                    },
+                    "move": {
+                        "enable": true,
+                        "speed": 2,
+                        "direction": "none",
+                        "random": false,
+                        "straight": false,
+                        "out_mode": "out"
+                    }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": {
+                        "onhover": {
+                            "enable": true,
+                            "mode": "grab"
+                        },
+                        "onclick": {
+                            "enable": true,
+                            "mode": "push"
+                        }
+                    },
+                    "modes": {
+                        "grab": {
+                            "distance": 140,
+                            "line_linked": {
+                                "opacity": 1
+                            }
+                        },
+                        "push": {
+                            "particles_nb": 4
+                        }
+                    }
+                }
+            });
+        }, 1000);
+        
+        // Set user type (citizen/officer)
+        function setUserType(type) {
+            const citizenBtn = document.getElementById('citizen-btn');
+            const officerBtn = document.getElementById('officer-btn');
+            
+            if (type === 'citizen') {
+                citizenBtn.classList.add('active');
+                officerBtn.classList.remove('active');
+                document.getElementById('citizen-signup-form').classList.remove('hidden');
+                document.getElementById('officer-signup-form').classList.add('hidden');
+            } else {
+                citizenBtn.classList.remove('active');
+                officerBtn.classList.add('active');
+                document.getElementById('citizen-signup-form').classList.add('hidden');
+                document.getElementById('officer-signup-form').classList.remove('hidden');
+            }
+        }
+        
+        // Password visibility toggle
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            const eyeIcon = document.getElementById(`${id}-eye-icon`);
+            const eyeSlashIcon = document.getElementById(`${id}-eye-slash-icon`);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (eyeIcon) eyeIcon.classList.add('hidden');
+                if (eyeSlashIcon) eyeSlashIcon.classList.remove('hidden');
+            } else {
+                input.type = 'password';
+                if (eyeIcon) eyeIcon.classList.remove('hidden');
+                if (eyeSlashIcon) eyeSlashIcon.classList.add('hidden');
+            }
+        }
+        
+        // Password strength checker
+        function setupPasswordStrength(inputId, strengthBarId, strengthTextId) {
+            document.getElementById(inputId).addEventListener('input', function() {
+                const password = this.value;
+                const strengthBar = document.getElementById(strengthBarId);
+                const strengthText = document.getElementById(strengthTextId).querySelector('span');
+                
+                // Reset
+                strengthBar.style.width = '0%';
+                strengthBar.className = 'password-strength-meter-fill bg-red-500';
+                strengthText.textContent = 'Weak';
+                strengthText.className = 'font-medium';
+                
+                // Calculate strength
+                let strength = 0;
+                if (password.length >= 8) strength += 1;
+                if (password.match(/[a-z]/)) strength += 1;
+                if (password.match(/[A-Z]/)) strength += 1;
+                if (password.match(/[0-9]/)) strength += 1;
+                if (password.match(/[^a-zA-Z0-9]/)) strength += 1;
+                
+                // Update UI
+                if (strength > 3) {
+                    strengthBar.style.width = '100%';
+                    strengthBar.classList.add('bg-green-500');
+                    strengthBar.classList.remove('bg-yellow-500', 'bg-red-500');
+                    strengthText.textContent = 'Strong';
+                    strengthText.classList.add('text-green-400');
+                } else if (strength > 1) {
+                    strengthBar.style.width = '66%';
+                    strengthBar.classList.add('bg-yellow-500');
+                    strengthBar.classList.remove('bg-green-500', 'bg-red-500');
+                    strengthText.textContent = 'Medium';
+                    strengthText.classList.add('text-yellow-400');
+                } else if (password.length > 0) {
+                    strengthBar.style.width = '33%';
+                    strengthText.classList.add('text-red-400');
+                }
+            });
+        }
+        
+        // Setup password strength meters
+        setupPasswordStrength('citizen-password', 'citizen-password-strength', 'citizen-password-strength-text');
+        setupPasswordStrength('officer-password', 'officer-password-strength', 'officer-password-strength-text');
+        
+        // Notification system
+        function showNotification(message, type = "success") {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()">✖</button>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Trigger animation
+            setTimeout(() => notification.classList.add('show'), 10);
+            
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 400);
+            }, 4000);
+        }
+        
+       
+    </script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
+        import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
+    
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCqlFmhCS5pZ3siwhLqVJmVSuio9ZmZBik",
+            authDomain: "urban-flow123.firebaseapp.com",
+            projectId: "urban-flow123",
+            storageBucket: "urban-flow123.firebasestorage.app",
+            messagingSenderId: "441423258690",
+            appId: "1:441423258690:web:7a67abdb55f16c33ecf9db"
+        };
+    
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        document.getElementById("officer-signup-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const fullName = document.getElementById("officer-full-name").value;
+        const officerId = document.getElementById("officer-id-number").value;
+        const badgeNumber = document.getElementById("officer-badge-number").value;
+        const department = document.getElementById("officer-department").value;
+        const email = document.getElementById("officer-email").value;
+        const password = document.getElementById("officer-password").value;
+        const confirmPassword = document.getElementById("officer-confirm-password").value;
+        const termsAccepted = document.getElementById("officer-terms").checked;
+        const verifiedOfficer = document.getElementById("officer-verify").checked;
+
+        // Error elements
+        const passwordError = document.getElementById("officer-confirm-error");
+        const termsError = document.getElementById("officer-terms-error");
+        const verifyError = document.getElementById("officer-verify-error");
+
+        passwordError.classList.add("hidden");
+        termsError.classList.add("hidden");
+        verifyError.classList.add("hidden");
+
+        // Validation
+        if (password !== confirmPassword) {
+            passwordError.textContent = "Passwords do not match!";
+            passwordError.classList.remove("hidden");
+            return;
+        }
+
+        if (!termsAccepted) {
+            termsError.textContent = "You must accept the terms!";
+            termsError.classList.remove("hidden");
+            return;
+        }
+
+        if (!verifiedOfficer) {
+            verifyError.textContent = "You must verify that you are an authorized officer!";
+            verifyError.classList.remove("hidden");
+            return;
+        }
+
+        try {
+            // Create user in Firebase Authentication
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Update profile with officer's full name
+            await updateProfile(user, {
+                displayName: fullName
+            });
+
+            // Store officer details in Firestore
+            await setDoc(doc(db, "users", user.uid), {
+                fullName: fullName,
+                officerId: officerId,
+                badgeNumber: badgeNumber,
+                department: department,
+                email: email,
+                role: "officer"
+            });
+
+            alert("Officer account created successfully! Redirecting...");
+            setTimeout(() => {
+                window.location.href = "login.html";
+            }, 2000);
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    });
+        // Form submission
+        document.getElementById("citizen-signup-form").addEventListener("submit", async (event) => {
+            event.preventDefault();
+    
+            const fullName = document.getElementById("citizen-name").value;
+            const email = document.getElementById("citizen-email").value;
+            const password = document.getElementById("citizen-password").value;
+            const confirmPassword = document.getElementById("citizen-confirm-password").value;
+            const termsAccepted = document.getElementById("citizen-terms").checked;
+    
+            // Error elements
+            const passwordError = document.getElementById("citizen-confirm-error");
+            const termsError = document.getElementById("citizen-terms-error");
+    
+            passwordError.classList.add("hidden");
+            termsError.classList.add("hidden");
+    
+            // Validation
+            if (password !== confirmPassword) {
+                passwordError.textContent = "Passwords do not match!";
+                passwordError.classList.remove("hidden");
+                return;
+            }
+    
+            if (!termsAccepted) {
+                termsError.textContent = "You must accept the terms!";
+                termsError.classList.remove("hidden");
+                return;
+            }
+    
+            try {
+                // Create user in Firebase Authentication
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+    
+                // Update profile with display name
+                await updateProfile(user, {
+                    displayName: fullName
+                });
+    
+                // Store role in Firestore
+                await setDoc(doc(db, "users", user.uid), {
+                    fullName: fullName,
+                    email: email,
+                    role: "citizen"
+                });
+    
+                alert("Account created successfully! Redirecting...");
+                setTimeout(() => {
+                    window.location.href = "login.html";
+                }, 2000);
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        });
+    </script>
+    
+</body>
+</html>

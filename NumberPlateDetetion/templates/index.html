@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Plate Detection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-6">
+
+    <div class="w-full max-w-lg bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+        
+        <!-- Main Heading -->
+        <h1 class="text-3xl font-bold text-indigo-400 mb-6">License Plate Detection</h1>
+        <p class="text-gray-300 text-lg mb-4">Upload an image to detect the license plate.</p>
+
+        <!-- Drag & Drop File Upload -->
+        <form action="/upload" method="post" enctype="multipart/form-data" class="space-y-4">
+            <label for="imageInput" id="dropzone-label"
+                class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-500 border-dashed rounded-lg cursor-pointer bg-gray-700 hover:bg-gray-600 transition-all shadow-md">
+                <div id="dropzone-content" class="flex flex-col items-center justify-center pt-5 pb-6">
+                    <i class="fas fa-upload text-6xl text-gray-300 mb-3 opacity-80 hover:opacity-100 transition-all"></i>
+                    <p class="mb-2 text-lg font-semibold text-gray-300">Click to upload or drag & drop</p>
+                    <p class="text-sm text-gray-400">Supported: JPG, PNG, GIF</p>
+                </div>
+                <input id="imageInput" type="file" name="file" class="hidden" accept="image/*" required />
+            </label>
+
+            <!-- Image Preview (replaces upload area) -->
+            <div id="imagePreview" class="w-full h-64 hidden">
+                <img id="previewImg" src="#" alt="Image Preview" class="w-full h-full object-contain rounded-lg shadow-md">
+            </div>
+
+            <!-- Loading Animation (hidden by default) -->
+            <div id="loadingAnimation" class="hidden">
+                <div class="flex flex-col items-center justify-center w-full h-64 bg-gray-700 rounded-lg">
+                    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mb-4"></div>
+                    <p class="text-gray-300">Processing image...</p>
+                </div>
+            </div>
+
+            <button type="submit" id="submitButton"
+                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-all">
+                Upload & Detect
+            </button>
+        </form>
+
+        <!-- Display License Plate Result -->
+        {% if license_plate %}
+        <div class="mt-6 p-4 bg-gray-700 rounded-lg">
+            <h2 class="text-xl font-semibold text-green-400 mb-2">Detected License Plate:</h2>
+            <p class="text-white text-lg font-mono">{{ license_plate }}</p>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <script>
+        document.getElementById("imageInput").addEventListener("change", function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Hide upload area, show preview
+                    document.getElementById("dropzone-label").classList.add("hidden");
+                    document.getElementById("previewImg").src = e.target.result;
+                    document.getElementById("imagePreview").classList.remove("hidden");
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.querySelector("form").addEventListener("submit", function() {
+            // Show loading animation and hide preview when form is submitted
+            document.getElementById("imagePreview").classList.add("hidden");
+            document.getElementById("loadingAnimation").classList.remove("hidden");
+            document.getElementById("submitButton").disabled = true;
+            document.getElementById("submitButton").classList.add("opacity-50");
+        });
+    </script>
+
+</body>
+</html>

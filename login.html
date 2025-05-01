@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanFlow | Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        
+        .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+        }
+        
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, #48CAE4, #3A86FF);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .btn-glow:hover {
+            box-shadow: 0 0 15px #3A86FF;
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Custom checkbox */
+        .custom-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #334155;
+            border-radius: 4px;
+            background-color: #1e293b;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        
+        .custom-checkbox:checked {
+            background-color: #3A86FF;
+            border-color: #3A86FF;
+        }
+        
+        .custom-checkbox:checked::after {
+            content: '\2713';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            min-width: 300px;
+            max-width: 90vw;
+            padding: 16px 24px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .notification.success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(5, 150, 105, 0.9) 100%);
+        }
+        
+        .notification.error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(220, 38, 38, 0.9) 100%);
+        }
+        
+        .notification::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            animation: progressBar 4s linear forwards;
+        }
+        
+        @keyframes progressBar {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        
+        /* Input focus effect */
+        .input-focus:focus {
+            border-color: #3A86FF;
+            box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.3);
+        }
+        
+        /* User type selector */
+        .user-type-selector {
+            display: flex;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background-color: #1e293b;
+            margin-bottom: 1.5rem;
+        }
+        
+        .user-type-btn {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .user-type-btn.active {
+            background-color: #1e40af;
+            border-bottom-color: #3b82f6;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .glass-card {
+                width: 90%;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <!-- Particle.js Background -->
+    <div id="particles-js"></div>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
+        <div class="flex flex-col items-center">
+            <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-blue-400 text-lg">Loading UrbanFlow...</p>
+        </div>
+    </div>
+    
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <!-- Login Container -->
+    <div class="glass-card rounded-xl p-8 w-full max-w-md mx-4 slide-in">
+        <div class="flex flex-col items-center mb-8">
+            <div class="flex items-center space-x-2 mb-4">
+                <i class="fas fa-traffic-light text-blue-400 text-3xl"></i>
+                <h1 class="text-3xl font-bold gradient-text">UrbanFlow</h1>
+            </div>
+            <p class="text-blue-200 text-center">Sign in to access your traffic management dashboard</p>
+        </div>
+        
+        <!-- User Type Selector -->
+        <div class="user-type-selector mb-6">
+            <div id="citizen-btn" class="user-type-btn active" onclick="setUserType('citizen')">
+                <i class="fas fa-user mr-2"></i> Citizen
+            </div>
+            <div id="officer-btn" class="user-type-btn" onclick="setUserType('officer')">
+                <i class="fas fa-shield-alt mr-2"></i> Officer
+            </div>
+        </div>
+        
+        <!-- Citizen Login Form -->
+        <form id="citizen-login-form" class="space-y-6">
+            <div>
+                <label for="email" class="block text-sm font-medium text-blue-200 mb-1">Email</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-envelope text-blue-400"></i>
+                    </div>
+                    <input type="email" id="email" required
+                        class="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200"
+                        placeholder="your@email.com">
+                </div>
+                <p id="email-error" class="mt-1 text-sm text-red-400 hidden"></p>
+            </div>
+            
+            <div>
+                <label for="password" class="block text-sm font-medium text-blue-200 mb-1">Password</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-lock text-blue-400"></i>
+                    </div>
+                    <input type="password" id="password" required
+                        class="w-full pl-10 pr-10 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200"
+                        placeholder="••••••••">
+                    <button type="button" onclick="togglePassword('password')"
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-400 hover:text-blue-300 transition duration-200">
+                        <i id="eye-icon" class="fas fa-eye"></i>
+                        <i id="eye-slash-icon" class="fas fa-eye-slash hidden"></i>
+                    </button>
+                </div>
+                <p id="password-error" class="mt-1 text-sm text-red-400 hidden"></p>
+            </div>
+            
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <input type="checkbox" id="remember" class="custom-checkbox mr-2">
+                    <label for="remember" class="text-sm text-blue-200">Remember me</label>
+                </div>
+                <a href="#" class="text-sm text-blue-400 hover:text-blue-300 transition duration-200">Forgot password?</a>
+            </div>
+            
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg btn-glow transition duration-200">
+                Sign In
+            </button>
+            
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-slate-700"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-slate-800 text-blue-200">Or continue with</span>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-3">
+                <button type="button" id="google-signin" class="flex items-center justify-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white py-2 px-4 rounded-lg transition duration-200 w-full">
+                    <img src="./images/google.png" alt="Google" class="w-5 h-5">
+                    <span>Sign in with Google</span>
+                </button>
+            </div>
+            
+            
+            <div class="text-center text-sm text-blue-200">
+                Don't have an account? <a href="signup.html" class="text-blue-400 hover:text-blue-300 font-medium transition duration-200">Sign up</a>
+            </div>
+        </form>
+        
+        <!-- Officer Login Form -->
+        <form id="officer-login-form" class="space-y-6 hidden">
+            <div>
+                <label for="officer-id" class="block text-sm font-medium text-blue-200 mb-1">Officer ID</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-id-card text-blue-400"></i>
+                    </div>
+                    <input type="text" id="officer-id" required
+                        class="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200"
+                        placeholder="TPD-12345">
+                </div>
+                <p id="officer-id-error" class="mt-1 text-sm text-red-400 hidden"></p>
+            </div>
+            
+            <div>
+                <label for="officer-password" class="block text-sm font-medium text-blue-200 mb-1">Password</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-lock text-blue-400"></i>
+                    </div>
+                    <input type="password" id="officer-password" required
+                        class="w-full pl-10 pr-10 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-blue-300 focus:outline-none input-focus transition duration-200"
+                        placeholder="••••••••">
+                    <button type="button" onclick="togglePassword('officer-password')"
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-400 hover:text-blue-300 transition duration-200">
+                        <i id="officer-eye-icon" class="fas fa-eye"></i>
+                        <i id="officer-eye-slash-icon" class="fas fa-eye-slash hidden"></i>
+                    </button>
+                </div>
+                <p id="officer-password-error" class="mt-1 text-sm text-red-400 hidden"></p>
+            </div>
+            
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <input type="checkbox" id="officer-remember" class="custom-checkbox mr-2">
+                    <label for="officer-remember" class="text-sm text-blue-200">Remember me</label>
+                </div>
+                <a href="#" class="text-sm text-blue-400 hover:text-blue-300 transition duration-200 officer-forgot-password">Forgot password?</a>
+            </div>
+            
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg btn-glow transition duration-200">
+                Officer Sign In
+            </button>
+            
+            <div class="text-center text-sm text-blue-200">
+                Don't have an account? <a href="signup.html" class="text-blue-400 hover:text-blue-300 font-medium transition duration-200">Register as Officer</a>
+            </div>
+        </form></div>
+    
+    <script>
+        // Hide loading screen after 1 second (simulate loading)
+        setTimeout(() => {
+            document.getElementById('loading-screen').classList.add('hidden');
+            
+            // Initialize particles.js
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": {
+                        "value": 80,
+                        "density": {
+                            "enable": true,
+                            "value_area": 800
+                        }
+                    },
+                    "color": {
+                        "value": "#3b82f6"
+                    },
+                    "shape": {
+                        "type": "circle",
+                        "stroke": {
+                            "width": 0,
+                            "color": "#000000"
+                        }
+                    },
+                    "opacity": {
+                        "value": 0.3,
+                        "random": false
+                    },
+                    "size": {
+                        "value": 3,
+                        "random": true
+                    },
+                    "line_linked": {
+                        "enable": true,
+                        "distance": 150,
+                        "color": "#3b82f6",
+                        "opacity": 0.2,
+                        "width": 1
+                    },
+                    "move": {
+                        "enable": true,
+                        "speed": 2,
+                        "direction": "none",
+                        "random": false,
+                        "straight": false,
+                        "out_mode": "out"
+                    }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": {
+                        "onhover": {
+                            "enable": true,
+                            "mode": "grab"
+                        },
+                        "onclick": {
+                            "enable": true,
+                            "mode": "push"
+                        }
+                    },
+                    "modes": {
+                        "grab": {
+                            "distance": 140,
+                            "line_linked": {
+                                "opacity": 1
+                            }
+                        },
+                        "push": {
+                            "particles_nb": 4
+                        }
+                    }
+                }
+            });
+        }, 1000);
+        
+        // Set user type (citizen/officer)
+        function setUserType(type) {
+            const citizenBtn = document.getElementById('citizen-btn');
+            const officerBtn = document.getElementById('officer-btn');
+            
+            if (type === 'citizen') {
+                citizenBtn.classList.add('active');
+                officerBtn.classList.remove('active');
+                document.getElementById('citizen-login-form').classList.remove('hidden');
+                document.getElementById('officer-login-form').classList.add('hidden');
+            } else {
+                citizenBtn.classList.remove('active');
+                officerBtn.classList.add('active');
+                document.getElementById('citizen-login-form').classList.add('hidden');
+                document.getElementById('officer-login-form').classList.remove('hidden');
+            }
+        }
+        
+        // Password visibility toggle
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            const eyeIcon = document.getElementById(`${id}-eye-icon`);
+            const eyeSlashIcon = document.getElementById(`${id}-eye-slash-icon`);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (eyeIcon) eyeIcon.classList.add('hidden');
+                if (eyeSlashIcon) eyeSlashIcon.classList.remove('hidden');
+            } else {
+                input.type = 'password';
+                if (eyeIcon) eyeIcon.classList.remove('hidden');
+                if (eyeSlashIcon) eyeSlashIcon.classList.add('hidden');
+            }
+        }
+        
+        // Notification system
+        function showNotification(message, type = "success") {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()">✖</button>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Trigger animation
+            setTimeout(() => notification.classList.add('show'), 10);
+            
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 400);
+            }, 4000);
+        }
+        
+    </script><script type="module">
+    import { 
+        initializeApp 
+    } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+    import { 
+        getAuth, 
+        signInWithEmailAndPassword, 
+        createUserWithEmailAndPassword, 
+        GoogleAuthProvider, 
+        signInWithPopup, 
+        setPersistence, 
+        browserLocalPersistence, 
+        browserSessionPersistence, 
+        sendPasswordResetEmail, 
+        onAuthStateChanged, 
+        signOut
+    } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
+    import { 
+        getFirestore, 
+        setDoc, 
+        doc, 
+        getDoc, 
+        serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
+
+    // Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyCqlFmhCS5pZ3siwhLqVJmVSuio9ZmZBik",
+        authDomain: "urban-flow123.firebaseapp.com",
+        projectId: "urban-flow123",
+        storageBucket: "urban-flow123.firebasestorage.app",
+        messagingSenderId: "441423258690",
+        appId: "1:441423258690:web:7a67abdb55f16c33ecf9db"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    // Toggle between citizen and officer login
+    document.getElementById('toggle-login-type')?.addEventListener('click', function() {
+        const citizenForm = document.getElementById('citizen-login-form');
+        const officerForm = document.getElementById('officer-login-form');
+        const toggleButton = document.getElementById('toggle-login-type');
+
+        if (citizenForm.classList.contains('hidden')) {
+            citizenForm.classList.remove('hidden');
+            officerForm.classList.add('hidden');
+            toggleButton.textContent = 'Are you a traffic officer? Click here to login';
+        } else {
+            citizenForm.classList.add('hidden');
+            officerForm.classList.remove('hidden');
+            toggleButton.textContent = 'Are you a citizen? Click here to login';
+        }
+    });
+
+    // Password visibility toggle function (for both forms)
+    window.togglePassword = function(fieldId) {
+        const passwordField = document.getElementById(fieldId);
+        const eyeIcon = document.getElementById(fieldId === 'password' ? 'eye-icon' : 'officer-eye-icon');
+        const eyeSlashIcon = document.getElementById(fieldId === 'password' ? 'eye-slash-icon' : 'officer-eye-slash-icon');
+
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            eyeIcon.classList.add('hidden');
+            eyeSlashIcon.classList.remove('hidden');
+        } else {
+            passwordField.type = 'password';
+            eyeIcon.classList.remove('hidden');
+            eyeSlashIcon.classList.add('hidden');
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Ensure User is Logged Out on Page Load
+        signOut(auth).catch((error) => console.error("Logout failed:", error));
+
+        // Citizen Login Form Submission
+        document.getElementById('citizen-login-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('remember').checked;
+
+            const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+            await setPersistence(auth, persistence);
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (!userDoc.exists()) throw new Error("User document not found");
+
+                const userData = userDoc.data();
+                if (userData.role !== 'citizen') {
+                    throw new Error("Please use the officer login for this account");
+                }
+
+                window.location.href = './citizen/index .html';
+
+            } catch (error) {
+                console.error('Citizen login error:', error.message);
+                const errorElement = document.getElementById('password-error');
+                errorElement.textContent = error.message;
+                errorElement.classList.remove('hidden');
+                setTimeout(() => errorElement.classList.add('hidden'), 5000);
+            }
+        });
+
+        // Officer Login Form Submission
+
+
+        // Google Sign-In (for citizens only)
+        document.getElementById('google-signin')?.addEventListener('click', async () => {
+            try {
+                const userCredential = await signInWithPopup(auth, provider);
+                const user = userCredential.user;
+
+                const userRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userRef);
+
+                if (!userDoc.exists()) {
+                    await setDoc(userRef, {
+                        email: user.email,
+                        name: user.displayName,
+                        role: 'citizen', // Default to citizen role for Google sign-in
+                        createdAt: serverTimestamp()
+                    });
+                }
+
+                const userData = userDoc.data();
+                if (userData?.role === 'officer') {
+                    await signOut(auth);
+                    throw new Error("Officers must use email/password login");
+                }
+
+                window.location.href = './citizen/index.html';
+
+            } catch (error) {
+                console.error('Google sign-in error:', error.message);
+                const errorElement = document.getElementById('password-error');
+                errorElement.textContent = error.message;
+                errorElement.classList.remove('hidden');
+                setTimeout(() => errorElement.classList.add('hidden'), 5000);
+            }
+        });
+
+        // Forgot Password (for citizens)
+        document.querySelector('.forgot-password')?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+
+            if (!email) {
+                const errorElement = document.getElementById('email-error');
+                errorElement.textContent = 'Please enter your email address';
+                errorElement.classList.remove('hidden');
+                setTimeout(() => errorElement.classList.add('hidden'), 5000);
+                return;
+            }
+
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert('Password reset email sent. Please check your inbox.');
+            } catch (error) {
+                console.error('Password reset error:', error.message);
+                const errorElement = document.getElementById('email-error');
+                errorElement.textContent = error.message;
+                errorElement.classList.remove('hidden');
+                setTimeout(() => errorElement.classList.add('hidden'), 5000);
+            }
+        });
+
+        document.getElementById('officer-login-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Clear previous errors
+    document.getElementById('officer-id-error').classList.add('hidden');
+    document.getElementById('officer-password-error').classList.add('hidden');
+    
+    const officerId = document.getElementById('officer-id').value.trim();
+    const password = document.getElementById('officer-password').value;
+    const rememberMe = document.getElementById('officer-remember').checked;
+
+    if (!officerId || !password) {
+        showOfficerError('Please fill in all fields', 'officer-password-error');
+        return;
+    }
+
+    // Construct email - IMPORTANT: Must match exactly how you registered officers
+    const email = `${officerId}@hyderabadpolice.gov.in`; 
+    console.log("Attempting login with:", {email, password}); // Debug log
+
+    try {
+        // Set persistence
+        const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+        await setPersistence(auth, persistence);
+
+        // 1. First authenticate
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        console.log("Auth successful, user:", user); // Debug log
+
+        // 2. Then check Firestore role
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        console.log("Firestore document:", userDoc.exists() ? userDoc.data() : "NOT FOUND"); // Debug log
+
+        if (!userDoc.exists()) {
+            throw new Error("Officer record not found in database");
+        }
+
+        const userData = userDoc.data();
+        if (userData.role !== 'officer') {
+            await signOut(auth); // Immediately log out if wrong role
+            throw new Error("This account is not registered as an officer");
+        }
+
+        // If we get here, login is successful
+        window.location.href = './officer/dashboard.html';
+
+    } catch (error) {
+        console.error('Full error details:', error); // Debug log
+        let errorMessage = error.message;
+        
+        // More specific error messages
+        if (error.code === 'auth/user-not-found') {
+            errorMessage = "No officer found with this ID";
+        } else if (error.code === 'auth/wrong-password') {
+            errorMessage = "Incorrect password for this officer ID";
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = "Invalid officer ID format";
+        }
+        
+        showOfficerError(errorMessage, 'officer-password-error');
+    }
+});
+
+// Helper function to show errors
+function showOfficerError(message, elementId) {
+    const errorElement = document.getElementById(elementId);
+    errorElement.textContent = message;
+    errorElement.classList.remove('hidden');
+    setTimeout(() => errorElement.classList.add('hidden'), 5000);
+}
+    });
+</script>
+</body>
+</html>

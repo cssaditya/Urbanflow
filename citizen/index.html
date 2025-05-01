@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanFlow | Hyderabad Traffic Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        
+        .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+        }
+        
+        .nav-glass {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, #48CAE4, #3A86FF);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .btn-glow:hover {
+            box-shadow: 0 0 15px #3A86FF;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(58, 134, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(58, 134, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(58, 134, 255, 0); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .traffic-light {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .heatmap-cell {
+            width: 20px;
+            height: 20px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        #hyderabadMap {
+            height: 300px;
+            width: 100%;
+            border-radius: 0.5rem;
+            z-index: 10;
+        }
+        
+        .leaflet-control-attribution {
+            display: none;
+        }
+        
+        .traffic-animation {
+            animation: trafficPulse 3s infinite;
+        }
+        
+        @keyframes trafficPulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+        
+        .incident-marker {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: incidentPulse 2s infinite;
+        }
+        
+        @keyframes incidentPulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        
+        .loading-bar {
+            height: 4px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+        
+        .loading-bar::before {
+            content: "";
+            position: absolute;
+            left: -50%;
+            height: 100%;
+            width: 50%;
+            background-color: #3A86FF;
+            animation: loading 1.5s infinite;
+            border-radius: 2px;
+        }
+        
+        @keyframes loading {
+            0% { left: -50%; }
+            100% { left: 100%; }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-out {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Particle.js Background -->
+    <div id="particles-js"></div>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
+        <div class="flex flex-col items-center">
+            <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-blue-400 text-lg">Loading Hyderabad Traffic Data...</p>
+            <div class="loading-bar w-64 mt-4"></div>
+        </div>
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="nav-glass fixed top-0 left-0 right-0 z-40 py-4 px-6 shadow-lg">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-traffic-light text-blue-400 text-2xl"></i>
+                <h1 class="text-2xl font-bold gradient-text">UrbanFlow Hyderabad</h1>
+            </div>
+            
+            <div class="hidden md:flex space-x-8">
+                <a href="#" class="text-white">
+                    <i class="fas fa-home mr-2"></i> Dashboard
+                </a>
+                <a href="alerts.html" class="text-blue-200 hover:text-white transition-colors">
+                    <i class="fas fa-bell mr-2"></i> Alerts
+                </a>
+                <a href="routes.html" class="text-blue-200 hover:text-white transition-colors">
+                    <i class="fas fa-route mr-2"></i> Routes
+                </a>
+                <a href="profile.html" class="text-blue-200 hover:text-white transition-colors">
+                    <i class="fas fa-user mr-2"></i> Profile
+                </a>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <button id="reportIssueBtn" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg flex items-center btn-glow transition-all pulse-animation">
+                        <i class="fas fa-bullhorn mr-2"></i> Report Issue
+                    </button>
+                </div>
+                <div class="relative">
+                    <img id="profileImage" src="https://thumbs.dreamstime.com/b/default-avatar-profile-icon-vector-social-media-user-image-182145777.jpg" 
+                         alt="Profile" class="w-10 h-10 rounded-full cursor-pointer border-2 border-blue-400">
+                    
+                    <div id="dropdownMenu" class="absolute right-0 mt-2 w-48 bg-slate-800 rounded-lg shadow-xl py-2 hidden">
+                        <a href="#" class="block px-4 py-2 text-blue-200 hover:bg-slate-700">Profile</a>
+                        <a href="#" class="block px-4 py-2 text-blue-200 hover:bg-slate-700">Settings</a>
+                        <a href="#" id="logout-btn" class="block px-4 py-2 text-red-400 hover:bg-slate-700">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="pt-24 pb-12 px-6 max-w-7xl mx-auto">
+        <!-- Header with Live Update -->
+        <div class="mb-8 slide-in" style="animation-delay: 0.1s;">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div>
+                    <h1 class="text-4xl font-bold mb-2">Hyderabad Traffic Dashboard</h1>
+                    <p class="text-blue-200">Live traffic conditions updated <span id="updateTime" class="font-semibold">just now</span></p>
+                </div>
+                <div class="flex items-center mt-4 md:mt-0">
+                    <div class="bg-blue-600/20 px-3 py-1 rounded-full flex items-center">
+                        <div class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                        <span class="text-sm">LIVE</span>
+                    </div>
+                    <button id="refreshDataBtn" class="ml-3 bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg text-sm btn-glow flex items-center">
+                        <i class="fas fa-sync-alt mr-2"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Cards with Live Data -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Current Traffic -->
+            <div class="glass-card rounded-xl p-6 slide-in traffic-animation" style="animation-delay: 0.2s;">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-blue-200">Current Traffic</p>
+                        <h3 id="currentTraffic" class="text-3xl font-bold">Loading...</h3>
+                    </div>
+                    <div class="bg-blue-600/20 p-3 rounded-full">
+                        <i class="fas fa-traffic-light text-blue-400 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div id="trafficTrend" class="flex items-center text-sm text-green-400">
+                        <i class="fas fa-arrow-down mr-1"></i>
+                        <span>Calculating...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Active Incidents -->
+            <div class="glass-card rounded-xl p-6 slide-in traffic-animation" style="animation-delay: 0.3s;">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-blue-200">Active Incidents</p>
+                        <h3 id="activeIncidents" class="text-3xl font-bold">...</h3>
+                    </div>
+                    <div class="bg-yellow-600/20 p-3 rounded-full">
+                        <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex items-center text-sm text-yellow-400">
+                        <span id="affectingRoutes">Checking your routes...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Traffic Speed -->
+            <div class="glass-card rounded-xl p-6 slide-in traffic-animation" style="animation-delay: 0.4s;">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-blue-200">Avg. Traffic Speed</p>
+                        <h3 id="avgSpeed" class="text-3xl font-bold">...</h3>
+                    </div>
+                    <div class="bg-green-600/20 p-3 rounded-full">
+                        <i class="fas fa-tachometer-alt text-green-400 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex items-center text-sm text-blue-200">
+                        <span id="speedComparison">vs. yesterday</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Weather -->
+            <div class="glass-card rounded-xl p-6 slide-in traffic-animation" style="animation-delay: 0.5s;">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-blue-200">Current Weather</p>
+                        <h3 id="currentWeather" class="text-3xl font-bold">...</h3>
+                    </div>
+                    <div id="weatherIcon" class="bg-blue-600/20 p-3 rounded-full">
+                        <i class="fas fa-cloud-sun text-yellow-400 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex items-center text-sm text-blue-200">
+                        <span id="weatherCondition">Loading conditions...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Hyderabad Traffic Map -->
+                <div class="glass-card rounded-xl p-6 slide-in" style="animation-delay: 0.6s;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold">Hyderabad Live Traffic Map</h2>
+                        <div class="flex space-x-2">
+                            <button id="mapRefreshBtn" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg text-sm btn-glow flex items-center">
+                                <i class="fas fa-sync-alt mr-1"></i> Refresh
+                            </button>
+                            <button id="mapLegendBtn" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-sm">
+                                <i class="fas fa-layer-group mr-1"></i> Legend
+                            </button>
+                        </div>
+                    </div>
+                    <div id="hyderabadMap" class="h-96"></div>
+                    <div class="mt-4 flex justify-between text-sm text-blue-200">
+                        <span>Data source: Hyderabad Traffic Police API</span>
+                        <span id="mapUpdateTime">Updated: Just now</span>
+                    </div>
+                </div>
+                
+                <!-- Live Traffic Incidents -->
+                <div class="glass-card rounded-xl p-6 slide-in" style="animation-delay: 0.7s;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold">Live Traffic Incidents</h2>
+                        <button id="viewAllIncidents" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg text-sm btn-glow">
+                            View All
+                        </button>
+                    </div>
+                    <div id="incidentsContainer" class="space-y-4">
+                        <!-- Incidents will be loaded here dynamically -->
+                        <div class="text-center py-8">
+                            <div class="loading-spinner mx-auto mb-4"></div>
+                            <p class="text-blue-400">Loading live incidents...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div class="space-y-6">
+                <!-- Traffic Trends Chart -->
+                <div class="glass-card rounded-xl p-6 slide-in" style="animation-delay: 0.8s;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold">Traffic Trends</h2>
+                        <div class="flex space-x-2">
+                            <button id="trendDayBtn" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg text-sm btn-glow">24H</button>
+                            <button id="trendWeekBtn" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-sm">Week</button>
+                            <button id="trendMonthBtn" class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-sm">Month</button>
+                        </div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="trafficTrendChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Recommended Routes -->
+                <div class="glass-card rounded-xl p-6 slide-in" style="animation-delay: 0.9s;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold">Recommended Routes</h2>
+                        <button id="refreshRoutesBtn" class="text-blue-400 hover:text-blue-300 text-sm">
+                            <i class="fas fa-sync-alt mr-1"></i> Refresh
+                        </button>
+                    </div>
+                    <div id="routesContainer" class="space-y-4">
+                        <!-- Routes will be loaded here dynamically -->
+                        <div class="text-center py-4">
+                            <div class="loading-spinner mx-auto mb-2"></div>
+                            <p class="text-blue-400 text-sm">Optimizing your routes...</p>
+                        </div>
+                    </div>
+                    <button id="addRouteBtn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 py-2 rounded-lg btn-glow transition-all">
+                        <i class="fas fa-plus mr-2"></i> Add New Route
+                    </button>
+                </div>
+                
+                <!-- Traffic Alerts -->
+                <div class="glass-card rounded-xl p-6 slide-in" style="animation-delay: 1s;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold">Traffic Alerts</h2>
+                        <span id="alertsCount" class="text-sm text-blue-200">0 Active</span>
+                    </div>
+                    <div id="alertsContainer" class="space-y-3">
+                        <!-- Alerts will be loaded here dynamically -->
+                        <div class="text-center py-4">
+                            <p class="text-blue-400 text-sm">No active alerts currently</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-slate-900/80 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center space-x-2 mb-4 md:mb-0">
+                    <i class="fas fa-traffic-light text-blue-400"></i>
+                    <span class="text-lg font-bold">UrbanFlow Hyderabad</span>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-blue-200 hover:text-white">About</a>
+                    <a href="#" class="text-blue-200 hover:text-white">API</a>
+                    <a href="#" class="text-blue-200 hover:text-white">Contact</a>
+                    <a href="#" class="text-blue-200 hover:text-white">Privacy</a>
+                </div>
+                <div class="mt-4 md:mt-0 text-sm text-blue-200">
+                    &copy; 2024 UrbanFlow. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Report Issue Modal -->
+    <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+        <div class="bg-slate-800 rounded-xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Report Traffic Issue</h2>
+                <button id="closeReportModal" class="text-blue-200 hover:text-white text-2xl">&times;</button>
+            </div>
+            <form id="reportForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-blue-200 mb-1">Issue Type</label>
+                    <select class="bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>Accident</option>
+                        <option>Road Damage</option>
+                        <option>Traffic Jam</option>
+                        <option>Signal Not Working</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-blue-200 mb-1">Location</label>
+                    <input type="text" placeholder="Enter location" class="bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-blue-200 mb-1">Description</label>
+                    <textarea rows="3" class="bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm text-blue-200 mb-1">Upload Photo (Optional)</label>
+                    <input type="file" class="bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg btn-glow transition-all">
+                    Submit Report
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Sample Hyderabad traffic data (in a real app, this would come from an API)
+        const hyderabadTrafficData = {
+            currentStatus: "Moderate",
+            incidents: [
+                {
+                    id: 1,
+                    type: "accident",
+                    location: "Hitech City Road",
+                    description: "Two-car collision near Cyber Towers",
+                    time: "15 mins ago",
+                    severity: "high",
+                    coordinates: [17.4454, 78.3813]
+                },
+                {
+                    id: 2,
+                    type: "construction",
+                    location: "Jubilee Hills Road No. 36",
+                    description: "Road widening work in progress",
+                    time: "2 hours ago",
+                    severity: "medium",
+                    coordinates: [17.4330, 78.4087]
+                },
+                {
+                    id: 3,
+                    type: "congestion",
+                    location: "PVNR Expressway",
+                    description: "Heavy traffic due to office hours",
+                    time: "45 mins ago",
+                    severity: "medium",
+                    coordinates: [17.4126, 78.4510]
+                }
+            ],
+            trafficTrends: {
+                day: [45, 60, 75, 80, 70, 65, 55, 50, 60, 70, 80, 85, 75, 65, 60, 55, 50, 60, 70, 80, 75, 65, 55, 45],
+                week: [65, 70, 75, 80, 85, 90, 75],
+                month: [70, 75, 80, 78, 82, 85, 80, 78, 75, 72, 70, 68, 65, 70, 75, 80, 78, 75, 72, 70, 68, 65, 70, 75, 80, 78, 75, 72, 70, 68]
+            },
+            weather: {
+                temp: "32°C",
+                condition: "Partly Cloudy",
+                icon: "cloud-sun"
+            },
+            avgSpeed: "28 km/h",
+            speedComparison: "+2 km/h vs yesterday"
+        };
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            // Simulate loading data
+            setTimeout(() => {
+                document.getElementById('loading-screen').classList.add('hidden');
+                
+                // Initialize particles.js
+                initParticles();
+                
+                // Initialize map
+                initMap();
+                
+                // Load traffic data
+                loadTrafficData();
+                
+                // Initialize chart
+                initChart();
+                
+                // Set up event listeners
+                setupEventListeners();
+                
+                // Start live updates
+                startLiveUpdates();
+            }, 2500);
+        });
+        
+        function initParticles() {
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": {
+                        "value": 100,
+                        "density": {
+                            "enable": true,
+                            "value_area": 800
+                        }
+                    },
+                    "color": {
+                        "value": "#3b82f6"
+                    },
+                    "shape": {
+                        "type": "circle",
+                        "stroke": {
+                            "width": 0,
+                            "color": "#000000"
+                        }
+                    },
+                    "opacity": {
+                        "value": 0.3,
+                        "random": false
+                    },
+                    "size": {
+                        "value": 3,
+                        "random": true
+                    },
+                    "line_linked": {
+                        "enable": true,
+                        "distance": 150,
+                        "color": "#3b82f6",
+                        "opacity": 0.2,
+                        "width": 1
+                    },
+                    "move": {
+                        "enable": true,
+                        "speed": 2,
+                        "direction": "none",
+                        "random": false,
+                        "straight": false,
+                        "out_mode": "out"
+                    }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": {
+                        "onhover": {
+                            "enable": true,
+                            "mode": "grab"
+                        },
+                        "onclick": {
+                            "enable": true,
+                            "mode": "push"
+                        }
+                    },
+                    "modes": {
+                        "grab": {
+                            "distance": 140,
+                            "line_linked": {
+                                "opacity": 1
+                            }
+                        },
+                        "push": {
+                            "particles_nb": 4
+                        }
+                    }
+                }
+            });
+        }
+        
+        let hyderabadMap;
+        let incidentMarkers = [];
+        
+        function initMap() {
+            // Initialize the map centered on Hyderabad
+            hyderabadMap = L.map('hyderabadMap').setView([17.3850, 78.4867], 12);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(hyderabadMap);
+            
+            // Add traffic layer (simulated)
+            L.tileLayer('https://{s}.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=your-api-key', {
+                opacity: 0.7
+            }).addTo(hyderabadMap);
+        }
+        
+        function loadTrafficData() {
+            // Update current traffic status
+            document.getElementById('currentTraffic').textContent = hyderabadTrafficData.currentStatus;
+            
+            // Update active incidents
+            document.getElementById('activeIncidents').textContent = hyderabadTrafficData.incidents.length;
+            document.getElementById('affectingRoutes').textContent = 
+                hyderabadTrafficData.incidents.length > 0 ? 
+                `${hyderabadTrafficData.incidents.length} affecting your routes` : 
+                'No incidents affecting your routes';
+            
+            // Update weather
+            document.getElementById('currentWeather').textContent = hyderabadTrafficData.weather.temp;
+            document.getElementById('weatherCondition').textContent = hyderabadTrafficData.weather.condition;
+            document.getElementById('weatherIcon').innerHTML = 
+                `<i class="fas fa-${hyderabadTrafficData.weather.icon} text-yellow-400 text-xl"></i>`;
+            
+            // Update traffic speed
+            document.getElementById('avgSpeed').textContent = hyderabadTrafficData.avgSpeed;
+            document.getElementById('speedComparison').textContent = hyderabadTrafficData.speedComparison;
+            
+            // Update timestamp
+            const now = new Date();
+            document.getElementById('updateTime').textContent = 
+                `as of ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            document.getElementById('mapUpdateTime').textContent = 
+                `Updated: ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            
+            // Load incidents
+            loadIncidents();
+            
+            // Load routes
+            loadRoutes();
+            
+            // Load alerts
+            loadAlerts();
+        }
+        
+        function loadIncidents() {
+            const container = document.getElementById('incidentsContainer');
+            container.innerHTML = '';
+            
+            if (hyderabadTrafficData.incidents.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-blue-400">No active incidents reported</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Clear existing markers
+            incidentMarkers.forEach(marker => hyderabadMap.removeLayer(marker));
+            incidentMarkers = [];
+            
+            // Add incidents to the list and map
+            hyderabadTrafficData.incidents.forEach(incident => {
+                // Add to list
+                const severityClass = incident.severity === 'high' ? 'bg-red-600/20 text-red-400' : 
+                                     incident.severity === 'medium' ? 'bg-yellow-600/20 text-yellow-400' : 
+                                     'bg-blue-600/20 text-blue-400';
+                
+                const iconClass = incident.type === 'accident' ? 'fa-car-crash' :
+                                 incident.type === 'construction' ? 'fa-road' :
+                                 incident.type === 'congestion' ? 'fa-traffic-light' :
+                                 'fa-exclamation-triangle';
+                
+                const incidentElement = document.createElement('div');
+                incidentElement.className = 'flex items-start p-3 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors';
+                incidentElement.innerHTML = `
+                    <div class="${severityClass} p-2 rounded-full mr-4">
+                        <i class="fas ${iconClass}"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold">${incident.location}</h3>
+                        <p class="text-sm text-blue-200">${incident.description}</p>
+                        <div class="mt-2 flex items-center text-sm">
+                            <span class="${severityClass} px-2 py-1 rounded mr-2">${incident.severity === 'high' ? 'Severe' : incident.severity === 'medium' ? 'Moderate' : 'Low'}</span>
+                            <span class="text-blue-200">${incident.time}</span>
+                        </div>
+                    </div>
+                    <button class="text-blue-400 hover:text-blue-300 view-incident-btn" data-id="${incident.id}">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                `;
+                container.appendChild(incidentElement);
+                
+                // Add to map
+                const marker = L.marker(incident.coordinates, {
+                    icon: L.divIcon({
+                        className: 'incident-marker',
+                        html: `<i class="fas ${iconClass} text-white"></i>`,
+                        iconSize: [24, 24]
+                    })
+                }).addTo(hyderabadMap);
+                
+                marker.bindPopup(`
+                    <div class="text-sm">
+                        <h3 class="font-bold">${incident.type.toUpperCase()}</h3>
+                        <p>${incident.location}</p>
+                        <p class="text-blue-600">${incident.description}</p>
+                        <p class="text-sm text-gray-600">${incident.time}</p>
+                    </div>
+                `);
+                
+                incidentMarkers.push(marker);
+            });
+            
+            // If there are incidents, zoom to show them all
+            if (hyderabadTrafficData.incidents.length > 0) {
+                const group = new L.featureGroup(incidentMarkers);
+                hyderabadMap.fitBounds(group.getBounds().pad(0.2));
+            }
+        }
+        
+        function loadRoutes() {
+            const routes = [
+                {
+                    name: "Home to Office",
+                    via: "PVNR Expressway",
+                    time: "25 min",
+                    status: "good"
+                },
+                {
+                    name: "Office to Gym",
+                    via: "Jubilee Hills",
+                    time: "18 min",
+                    status: "moderate"
+                },
+                {
+                    name: "Gym to Home",
+                    via: "Banjara Hills",
+                    time: "22 min",
+                    status: "good"
+                }
+            ];
+            
+            const container = document.getElementById('routesContainer');
+            container.innerHTML = '';
+            
+            routes.forEach(route => {
+                const statusColor = route.status === 'good' ? 'text-green-400' : 
+                                   route.status === 'moderate' ? 'text-yellow-400' : 'text-red-400';
+                
+                const routeElement = document.createElement('div');
+                routeElement.className = 'flex items-center justify-between p-3 bg-slate-800/50 rounded-lg hover:bg-slate-700 transition-colors';
+                routeElement.innerHTML = `
+                    <div>
+                        <h3 class="font-semibold">${route.name}</h3>
+                        <p class="text-sm text-blue-200">${route.via}</p>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="${statusColor} mr-2">${route.time}</span>
+                        <i class="fas fa-chevron-right text-blue-400"></i>
+                    </div>
+                `;
+                container.appendChild(routeElement);
+            });
+        }
+        
+        function loadAlerts() {
+            const alerts = [
+                {
+                    type: "emergency",
+                    title: "Emergency Vehicles",
+                    message: "Ambulance responding near Hitech City",
+                    time: "10 mins ago"
+                },
+                {
+                    type: "event",
+                    title: "Cultural Event",
+                    message: "Road closures near Tank Bund tomorrow 6 PM-10 PM",
+                    time: "2 hours ago"
+                }
+            ];
+            
+            const container = document.getElementById('alertsContainer');
+            container.innerHTML = '';
+            document.getElementById('alertsCount').textContent = `${alerts.length} Active`;
+            
+            if (alerts.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <p class="text-blue-400 text-sm">No active alerts currently</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            alerts.forEach(alert => {
+                const alertClass = alert.type === 'emergency' ? 'bg-red-600/20' : 
+                                  alert.type === 'event' ? 'bg-blue-600/20' : 'bg-yellow-600/20';
+                
+                const iconClass = alert.type === 'emergency' ? 'fa-ambulance' : 
+                                 alert.type === 'event' ? 'fa-calendar-alt' : 'fa-exclamation-triangle';
+                
+                const alertElement = document.createElement('div');
+                alertElement.className = `flex items-start p-3 ${alertClass} rounded-lg`;
+                alertElement.innerHTML = `
+                    <div class="p-2 rounded-full mr-3">
+                        <i class="fas ${iconClass} ${alert.type === 'emergency' ? 'text-red-400' : alert.type === 'event' ? 'text-blue-400' : 'text-yellow-400'}"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold">${alert.title}</h3>
+                        <p class="text-sm text-blue-200">${alert.message}</p>
+                        <div class="mt-1 text-xs text-blue-300">
+                            ${alert.time}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(alertElement);
+            });
+        }
+        
+        let trafficChart;
+        
+        function initChart() {
+            const ctx = document.getElementById('trafficTrendChart').getContext('2d');
+            
+            trafficChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [{
+                        label: 'Traffic Congestion (%)',
+                        data: hyderabadTrafficData.trafficTrends.day,
+                        borderColor: '#3A86FF',
+                        backgroundColor: 'rgba(58, 134, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 12
+                            }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateChart(period) {
+            let labels, data;
+            
+            if (period === 'day') {
+                labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+                data = hyderabadTrafficData.trafficTrends.day;
+            } else if (period === 'week') {
+                labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                data = hyderabadTrafficData.trafficTrends.week;
+            } else { // month
+                labels = Array.from({length: 30}, (_, i) => `${i+1}`);
+                data = hyderabadTrafficData.trafficTrends.month;
+            }
+            
+            trafficChart.data.labels = labels;
+            trafficChart.data.datasets[0].data = data;
+            trafficChart.update();
+        }
+        
+        function setupEventListeners() {
+            // Report issue button
+            document.getElementById('reportIssueBtn').addEventListener('click', () => {
+                document.getElementById('reportModal').classList.remove('hidden');
+            });
+            
+            // Close report modal
+            document.getElementById('closeReportModal').addEventListener('click', () => {
+                document.getElementById('reportModal').classList.add('hidden');
+            });
+            
+            // Refresh data button
+            document.getElementById('refreshDataBtn').addEventListener('click', () => {
+                refreshData();
+            });
+            
+            // Refresh map button
+            document.getElementById('mapRefreshBtn').addEventListener('click', () => {
+                refreshMap();
+            });
+            
+            // Chart period buttons
+            document.getElementById('trendDayBtn').addEventListener('click', () => {
+                updateChart('day');
+                document.getElementById('trendDayBtn').classList.add('bg-blue-600', 'btn-glow');
+                document.getElementById('trendDayBtn').classList.remove('bg-slate-700');
+                document.getElementById('trendWeekBtn').classList.add('bg-slate-700');
+                document.getElementById('trendWeekBtn').classList.remove('bg-blue-600', 'btn-glow');
+                document.getElementById('trendMonthBtn').classList.add('bg-slate-700');
+                document.getElementById('trendMonthBtn').classList.remove('bg-blue-600', 'btn-glow');
+            });
+            
+            document.getElementById('trendWeekBtn').addEventListener('click', () => {
+                updateChart('week');
+                document.getElementById('trendWeekBtn').classList.add('bg-blue-600', 'btn-glow');
+                document.getElementById('trendWeekBtn').classList.remove('bg-slate-700');
+                document.getElementById('trendDayBtn').classList.add('bg-slate-700');
+                document.getElementById('trendDayBtn').classList.remove('bg-blue-600', 'btn-glow');
+                document.getElementById('trendMonthBtn').classList.add('bg-slate-700');
+                document.getElementById('trendMonthBtn').classList.remove('bg-blue-600', 'btn-glow');
+            });
+            
+            document.getElementById('trendMonthBtn').addEventListener('click', () => {
+                updateChart('month');
+                document.getElementById('trendMonthBtn').classList.add('bg-blue-600', 'btn-glow');
+                document.getElementById('trendMonthBtn').classList.remove('bg-slate-700');
+                document.getElementById('trendDayBtn').classList.add('bg-slate-700');
+                document.getElementById('trendDayBtn').classList.remove('bg-blue-600', 'btn-glow');
+                document.getElementById('trendWeekBtn').classList.add('bg-slate-700');
+                document.getElementById('trendWeekBtn').classList.remove('bg-blue-600', 'btn-glow');
+            });
+            
+            // Profile dropdown
+            const profileImage = document.getElementById("profileImage");
+            const dropdownMenu = document.getElementById("dropdownMenu");
+            
+            profileImage.addEventListener("click", (event) => {
+                event.stopPropagation();
+                dropdownMenu.classList.toggle("hidden");
+            });
+            
+            document.addEventListener("click", (event) => {
+                if (!profileImage.contains(event.target)) {
+                    dropdownMenu.classList.add("hidden");
+                }
+            });
+        }
+        
+        function refreshData() {
+            // Show loading state
+            const btn = document.getElementById('refreshDataBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Refreshing';
+            btn.disabled = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                // In a real app, we would fetch fresh data here
+                loadTrafficData();
+                
+                // Restore button
+                btn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i> Refresh';
+                btn.disabled = false;
+                
+                // Show notification
+                showNotification('Data refreshed successfully');
+            }, 1500);
+        }
+        
+        function refreshMap() {
+            // Show loading state
+            const btn = document.getElementById('mapRefreshBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Refreshing';
+            btn.disabled = true;
+            
+            // Simulate map refresh
+            setTimeout(() => {
+                // In a real app, we would update map data here
+                
+                // Restore button
+                btn.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Refresh';
+                btn.disabled = false;
+                
+                // Update timestamp
+                const now = new Date();
+                document.getElementById('mapUpdateTime').textContent = 
+                    `Updated: ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+
+                showNotification('Map data updated');
+            }, 1000);
+        }
+        
+        function showNotification(message, type = 'success') {
+            // Create notification element
+            const notification = document.createElement('div');
+            
+            // Set base classes
+            notification.className = 'fixed bottom-4 right-4 text-white px-4 py-2 rounded-lg shadow-lg flex items-center animate-fade-in';
+            
+            // Add type-specific styling
+            const typeClasses = {
+                success: 'bg-green-600',
+                error: 'bg-red-600',
+                warning: 'bg-yellow-600',
+                info: 'bg-blue-600'
+            };
+            notification.classList.add(typeClasses[type] || typeClasses.success);
+            
+            // Set icon based on type
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            const icon = icons[type] || icons.success;
+            
+            // Add content
+            notification.innerHTML = `
+                <i class="fas ${icon} mr-2"></i>
+                <span>${message}</span>
+            `;
+            
+            // Add to DOM
+            document.body.appendChild(notification);
+            
+            // Auto-remove after delay
+            setTimeout(() => {
+                notification.classList.add('animate-fade-out');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        function startLiveUpdates() {
+            // Simulate live updates every 30 seconds
+            setInterval(() => {
+                // Randomly update some traffic data
+                const trafficLevels = ["Light", "Moderate", "Heavy", "Severe"];
+                const randomTraffic = trafficLevels[Math.floor(Math.random() * trafficLevels.length)];
+                
+                // Only update if different to avoid unnecessary UI changes
+                if (randomTraffic !== document.getElementById('currentTraffic').textContent) {
+                    document.getElementById('currentTraffic').textContent = randomTraffic;
+                    
+                    // Update trend indicator
+                    const trendElement = document.getElementById('trafficTrend');
+                    if (randomTraffic === "Light" || randomTraffic === "Moderate") {
+                        trendElement.className = 'flex items-center text-sm text-green-400';
+                        trendElement.innerHTML = '<i class="fas fa-arrow-down mr-1"></i> <span>Better than peak hours</span>';
+                    } else {
+                        trendElement.className = 'flex items-center text-sm text-red-400';
+                        trendElement.innerHTML = '<i class="fas fa-arrow-up mr-1"></i> <span>Worse than usual</span>';
+                    }
+                }
+                
+                // Update timestamp
+                const now = new Date();
+                document.getElementById('updateTime').textContent = 
+                    `as of ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                
+            }, 30000);
+        }
+    </script>
+    <script type="module">
+        import { 
+            initializeApp 
+        } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            GoogleAuthProvider, 
+            signInWithPopup, 
+            setPersistence, 
+            browserLocalPersistence, 
+            browserSessionPersistence, 
+            sendPasswordResetEmail, 
+            onAuthStateChanged, 
+            signOut
+        } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            setDoc, 
+            doc, 
+            getDoc, 
+            serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
+    
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCqlFmhCS5pZ3siwhLqVJmVSuio9ZmZBik",
+            authDomain: "urban-flow123.firebaseapp.com",
+            projectId: "urban-flow123",
+            storageBucket: "urban-flow123.appspot.com",
+            messagingSenderId: "441423258690",
+            appId: "1:441423258690:web:7a67abdb55f16c33ecf9db"
+        };
+    
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+        
+        // Logout functionality
+        document.getElementById('logout-btn')?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                await signOut(auth);
+                alert("Logged out successfully!");
+                window.location.href = "../login.html"; // Redirect to login page after logout
+            } catch (error) {
+                console.error("Logout error:", error.message);
+            }
+        });
+    </script>
+</body>
+</html>

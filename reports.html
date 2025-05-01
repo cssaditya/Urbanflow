@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanFlow | Traffic Reports</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        
+        .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+        }
+        
+        .nav-glass {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, #48CAE4, #3A86FF);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .btn-glow:hover {
+            box-shadow: 0 0 15px #3A86FF;
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .report-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .report-image {
+            transition: transform 0.3s ease;
+        }
+        
+        .report-card:hover .report-image {
+            transform: scale(1.05);
+        }
+        
+        /* Loading animation */
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #3A86FF;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Particle.js Background -->
+    <div id="particles-js"></div>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-slate-900/90 flex items-center justify-center z-50">
+        <div class="flex flex-col items-center">
+            <div class="loading-spinner mb-4"></div>
+            <p class="text-blue-400 text-lg">Loading Reports...</p>
+        </div>
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="nav-glass fixed top-0 left-0 right-0 z-40 py-4 px-6 shadow-lg">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-traffic-light text-blue-400 text-2xl"></i>
+                <h1 class="text-2xl font-bold gradient-text">UrbanFlow</h1>
+            </div>
+            
+            <div class="hidden md:flex space-x-8">
+                <a href="index.html" class="text-blue-200 hover:text-white transition-colors">
+                    <i class="fas fa-home mr-2"></i> Dashboard
+                </a>
+                <a href="alerts.html" class="text-blue-200 hover:text-white transition-colors">
+                    <i class="fas fa-bell mr-2"></i> Alerts
+                </a>
+                <a href="#" class="text-white">
+                    <i class="fas fa-file-alt mr-2"></i> Reports
+                </a>
+                <a href="profile.html" class="text-blue-200 hover:text-white transition-colors">
+                    <i class="fas fa-user mr-2"></i> Profile
+                </a>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg flex items-center btn-glow transition-all">
+                        <i class="fas fa-plus mr-2"></i> New Report
+                    </button>
+                </div>
+                <div class="relative">
+                    <img id="profileImage" src="./images/policeicon.png"
+                         alt="Profile" class="w-10 h-10 rounded-full cursor-pointer border-2 border-blue-400">
+                    
+                    <div id="dropdownMenu" class="absolute right-0 mt-2 w-48 bg-slate-800 rounded-lg shadow-xl py-2 hidden">
+                        <a href="#" class="block px-4 py-2 text-blue-200 hover:bg-slate-700">Profile</a>
+                        <a href="#" class="block px-4 py-2 text-blue-200 hover:bg-slate-700">Settings</a>
+                        <a href="#" id="logout-btn" class="block px-4 py-2 text-red-400 hover:bg-slate-700">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="pt-24 pb-12 px-6 max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8 slide-in" style="animation-delay: 0.1s;">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold mb-2">Traffic Reports</h1>
+                    <p class="text-blue-200">Historical data and detailed incident reports</p>
+                </div>
+                <div class="flex space-x-3">
+                    <div class="relative">
+                        <input type="text" placeholder="Search reports..." class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class="fas fa-search absolute left-3 top-3 text-blue-200"></i>
+                    </div>
+                    <button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg flex items-center btn-glow transition-all">
+                        <i class="fas fa-filter mr-2"></i> Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Report Statistics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 slide-in" style="animation-delay: 0.2s;">
+            <div class="glass-card rounded-xl p-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-blue-200">Total Reports</p>
+                        <h3 class="text-3xl font-bold">1,247</h3>
+                    </div>
+                    <div class="bg-blue-600/20 p-3 rounded-full">
+                        <i class="fas fa-file-alt text-blue-400 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex items-center text-sm text-green-400">
+                        <i class="fas fa-arrow-up mr-1"></i>
+                        <span>18% increase this month</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-card rounded-xl p-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-blue-200">Resolved Cases</p>
+                        <h3 class="text-3xl font-bold">934</h3>
+                    </div>
+                    <div class="bg-green-600/20 p-3 rounded-full">
+                        <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex items-center text-sm text-green-400">
+                        <i class="fas fa-arrow-up mr-1"></i>
+                        <span>75% resolution rate</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-card rounded-xl p-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-blue-200">Avg. Resolution Time</p>
+                        <h3 class="text-3xl font-bold">2.8d</h3>
+                    </div>
+                    <div class="bg-yellow-600/20 p-3 rounded-full">
+                        <i class="fas fa-stopwatch text-yellow-400 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex items-center text-sm text-red-400">
+                        <i class="fas fa-arrow-up mr-1"></i>
+                        <span>12% longer than last month</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Report Trends -->
+        <div class="glass-card rounded-xl p-6 mb-8 slide-in" style="animation-delay: 0.3s;">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Report Trends</h2>
+                <div class="flex space-x-2">
+                    <button class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg text-sm btn-glow">This Month</button>
+                    <button class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-sm">Quarter</button>
+                    <button class="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded-lg text-sm">Year</button>
+                </div>
+            </div>
+            <div class="h-64">
+                <canvas id="reportTrendsChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Recent Reports -->
+        <div class="slide-in" style="animation-delay: 0.4s;">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Recent Reports</h2>
+                <button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg flex items-center btn-glow transition-all">
+                    <i class="fas fa-download mr-2"></i> Export
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Report Card 1 -->
+                <div class="glass-card report-card rounded-xl overflow-hidden transition-all duration-300">
+                    <div class="h-48 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1588615419957-47ce3fc186a6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" 
+                             alt="Accident scene" 
+                             class="w-full h-full object-cover report-image">
+                    </div>
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-semibold">Multi-car collision</h3>
+                            <span class="bg-red-600/20 text-red-400 px-2 py-1 rounded text-xs">High Priority</span>
+                        </div>
+                        <p class="text-sm text-blue-200 mb-3">Highway 45 near Exit 12</p>
+                        <div class="flex justify-between items-center text-sm">
+                            <div class="text-blue-200">
+                                <i class="far fa-clock mr-1"></i> 2 hours ago
+                            </div>
+                            <button class="text-blue-400 hover:text-blue-300">
+                                View Details <i class="fas fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Report Card 2 -->
+                <div class="glass-card report-card rounded-xl overflow-hidden transition-all duration-300">
+                    <div class="h-48 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" 
+                             alt="Traffic jam" 
+                             class="w-full h-full object-cover report-image">
+                    </div>
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-semibold">Major traffic congestion</h3>
+                            <span class="bg-yellow-600/20 text-yellow-400 px-2 py-1 rounded text-xs">Moderate</span>
+                        </div>
+                        <p class="text-sm text-blue-200 mb-3">Downtown business district</p>
+                        <div class="flex justify-between items-center text-sm">
+                            <div class="text-blue-200">
+                                <i class="far fa-clock mr-1"></i> 5 hours ago
+                            </div>
+                            <button class="text-blue-400 hover:text-blue-300">
+                                View Details <i class="fas fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Report Card 3 -->
+                <div class="glass-card report-card rounded-xl overflow-hidden transition-all duration-300">
+                    <div class="h-48 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1558981852-426c6c22a060?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" 
+                             alt="Speeding vehicle" 
+                             class="w-full h-full object-cover report-image">
+                    </div>
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-semibold">Speeding violation</h3>
+                            <span class="bg-blue-600/20 text-blue-400 px-2 py-1 rounded text-xs">Routine</span>
+                        </div>
+                        <p class="text-sm text-blue-200 mb-3">Main Street camera #45</p>
+                        <div class="flex justify-between items-center text-sm">
+                            <div class="text-blue-200">
+                                <i class="far fa-clock mr-1"></i> 1 day ago
+                            </div>
+                            <button class="text-blue-400 hover:text-blue-300">
+                                View Details <i class="fas fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Report Card 4 -->
+                <div class="glass-card report-card rounded-xl overflow-hidden transition-all duration-300">
+                    <div class="h-48 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" 
+                             alt="Red light violation" 
+                             class="w-full h-full object-cover report-image">
+                    </div>
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-semibold">Red light violation</h3>
+                            <span class="bg-blue-600/20 text-blue-400 px-2 py-1 rounded text-xs">Routine</span>
+                        </div>
+                        <p class="text-sm text-blue-200 mb-3">Elm & Broadway intersection</p>
+                        <div class="flex justify-between items-center text-sm">
+                            <div class="text-blue-200">
+                                <i class="far fa-clock mr-1"></i> 1 day ago
+                            </div>
+                            <button class="text-blue-400 hover:text-blue-300">
+                                View Details <i class="fas fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Report Card 5 -->
+                <div class="glass-card report-card rounded-xl overflow-hidden transition-all duration-300">
+                    <div class="h-48 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1601758003122-53c40e686a19?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" 
+                             alt="Roadwork" 
+                             class="w-full h-full object-cover report-image">
+                    </div>
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-semibold">Road construction</h3>
+                            <span class="bg-yellow-600/20 text-yellow-400 px-2 py-1 rounded text-xs">Scheduled</span>
+                        </div>
+                        <p class="text-sm text-blue-200 mb-3">5th Avenue renovation</p>
+                        <div class="flex justify-between items-center text-sm">
+                            <div class="text-blue-200">
+                                <i class="far fa-clock mr-1"></i> 2 days ago
+                            </div>
+                            <button class="text-blue-400 hover:text-blue-300">
+                                View Details <i class="fas fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Report Card 6 -->
+                <div class="glass-card report-card rounded-xl overflow-hidden transition-all duration-300">
+                    <div class="h-48 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1581093450021-4a7360e9a6a8?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" 
+                             alt="Traffic signal" 
+                             class="w-full h-full object-cover report-image">
+                    </div>
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-semibold">Signal malfunction</h3>
+                            <span class="bg-red-600/20 text-red-400 px-2 py-1 rounded text-xs">Urgent</span>
+                        </div>
+                        <p class="text-sm text-blue-200 mb-3">Main & Central intersection</p>
+                        <div class="flex justify-between items-center text-sm">
+                            <div class="text-blue-200">
+                                <i class="far fa-clock mr-1"></i> 3 days ago
+                            </div>
+                            <button class="text-blue-400 hover:text-blue-300">
+                                View Details <i class="fas fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="mt-8 flex justify-center slide-in" style="animation-delay: 0.5s;">
+                <nav class="flex items-center space-x-2">
+                    <button class="px-3 py-1 rounded-lg bg-slate-800 text-blue-200 hover:bg-blue-600">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="px-4 py-1 rounded-lg bg-blue-600 text-white">1</button>
+                    <button class="px-4 py-1 rounded-lg bg-slate-800 text-blue-200 hover:bg-blue-600">2</button>
+                    <button class="px-4 py-1 rounded-lg bg-slate-800 text-blue-200 hover:bg-blue-600">3</button>
+                    <span class="px-2 text-blue-200">...</span>
+                    <button class="px-4 py-1 rounded-lg bg-slate-800 text-blue-200 hover:bg-blue-600">8</button>
+                    <button class="px-3 py-1 rounded-lg bg-slate-800 text-blue-200 hover:bg-blue-600">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-slate-900/80 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center space-x-2 mb-4 md:mb-0">
+                    <i class="fas fa-traffic-light text-blue-400"></i>
+                    <span class="text-lg font-bold">UrbanFlow</span>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-blue-200 hover:text-white">About</a>
+                    <a href="#" class="text-blue-200 hover:text-white">Services</a>
+                    <a href="#" class="text-blue-200 hover:text-white">Contact</a>
+                    <a href="#" class="text-blue-200 hover:text-white">Privacy</a>
+                </div>
+                <div class="mt-4 md:mt-0 text-sm text-blue-200">
+                    &copy; 2024 UrbanFlow. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Initialize particles.js and charts
+        document.addEventListener('DOMContentLoaded', () => {
+            // Hide loading screen after 1 second (simulate loading)
+            setTimeout(() => {
+                document.getElementById('loading-screen').classList.add('hidden');
+                
+                // Initialize particles.js
+                particlesJS('particles-js', {
+                    "particles": {
+                        "number": {
+                            "value": 80,
+                            "density": {
+                                "enable": true,
+                                "value_area": 800
+                            }
+                        },
+                        "color": {
+                            "value": "#3b82f6"
+                        },
+                        "shape": {
+                            "type": "circle",
+                            "stroke": {
+                                "width": 0,
+                                "color": "#000000"
+                            }
+                        },
+                        "opacity": {
+                            "value": 0.3,
+                            "random": false
+                        },
+                        "size": {
+                            "value": 3,
+                            "random": true
+                        },
+                        "line_linked": {
+                            "enable": true,
+                            "distance": 150,
+                            "color": "#3b82f6",
+                            "opacity": 0.2,
+                            "width": 1
+                        },
+                        "move": {
+                            "enable": true,
+                            "speed": 2,
+                            "direction": "none",
+                            "random": false,
+                            "straight": false,
+                            "out_mode": "out"
+                        }
+                    },
+                    "interactivity": {
+                        "detect_on": "canvas",
+                        "events": {
+                            "onhover": {
+                                "enable": true,
+                                "mode": "grab"
+                            },
+                            "onclick": {
+                                "enable": true,
+                                "mode": "push"
+                            }
+                        },
+                        "modes": {
+                            "grab": {
+                                "distance": 140,
+                                "line_linked": {
+                                    "opacity": 1
+                                }
+                            },
+                            "push": {
+                                "particles_nb": 4
+                            }
+                        }
+                    }
+                });
+                
+                // Animate elements on page load
+                const elements = document.querySelectorAll('.slide-in');
+                elements.forEach((el, index) => {
+                    el.style.animationDelay = `${index * 0.1}s`;
+                });
+                
+                // Report Trends Chart
+                const trendsCtx = document.getElementById('reportTrendsChart').getContext('2d');
+                new Chart(trendsCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                        datasets: [
+                            {
+                                label: 'Violations',
+                                data: [65, 59, 80, 81, 56, 55, 70],
+                                borderColor: '#ef233c',
+                                backgroundColor: 'rgba(239, 35, 60, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            },
+                            {
+                                label: 'Accidents',
+                                data: [28, 48, 40, 19, 36, 27, 45],
+                                borderColor: '#3a86ff',
+                                backgroundColor: 'rgba(58, 134, 255, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            },
+                            {
+                                label: 'Infrastructure',
+                                data: [18, 22, 30, 25, 32, 28, 20],
+                                borderColor: '#ffd166',
+                                backgroundColor: 'rgba(255, 209, 102, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    color: '#e2e8f0'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#94a3b8'
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#94a3b8'
+                                }
+                            }
+                        }
+                    }
+                });
+            }, 1000);
+        });
+    </script>
+    <script>
+        const profileImage = document.getElementById("profileImage");
+        const dropdownMenu = document.getElementById("dropdownMenu");
+    
+        profileImage.addEventListener("click", (event) => {
+            event.stopPropagation();
+            dropdownMenu.classList.toggle("hidden");
+        });
+    
+        document.addEventListener("click", (event) => {
+            if (!profileImage.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                dropdownMenu.classList.add("hidden");
+            }
+        });
+    </script>
+        <script type="module">
+            import { 
+                initializeApp 
+            } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+            import { 
+                getAuth, 
+                signInWithEmailAndPassword, 
+                createUserWithEmailAndPassword, 
+                GoogleAuthProvider, 
+                signInWithPopup, 
+                setPersistence, 
+                browserLocalPersistence, 
+                browserSessionPersistence, 
+                sendPasswordResetEmail, 
+                onAuthStateChanged, 
+                signOut
+            } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
+            import { 
+                getFirestore, 
+                setDoc, 
+                doc, 
+                getDoc, 
+                serverTimestamp 
+            } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
+        
+            // ✅ Firebase Configuration
+            const firebaseConfig = {
+                apiKey: "AIzaSyCqlFmhCS5pZ3siwhLqVJmVSuio9ZmZBik",
+                authDomain: "urban-flow123.firebaseapp.com",
+                projectId: "urban-flow123",
+                storageBucket: "urban-flow123.firebasestorage.app",
+                messagingSenderId: "441423258690",
+                appId: "1:441423258690:web:7a67abdb55f16c33ecf9db"
+            };
+        
+            // ✅ Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            const provider = new GoogleAuthProvider();
+            document.getElementById('logout-btn')?.addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    await signOut(auth);
+                    alert("Logged out successfully!");
+                    window.location.href = "../login.html"; // Redirect to login page after logout
+                } catch (error) {
+                    console.error("Logout error:", error.message);
+                }
+            });    
+            </script>
+</body>
+</html>

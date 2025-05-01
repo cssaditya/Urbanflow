@@ -1,0 +1,8 @@
+﻿__pycache__/
+venv/
+.env
+*.pyc
+.vs/
+node_modules/
+.DS_Store
+CSSS.zip
