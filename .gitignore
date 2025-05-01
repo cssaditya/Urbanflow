@@ -54,6 +54,7 @@ CSSS.zip
 # API Keys and Secrets
 firebase.txt
 cloudinary-api.txt
+script.js
 *.key
 *.pem
 *.cert

@@ -1,5 +1,5 @@
-Cloud name - dqnrrv3vl
+Cloud name - YOUR_CLOUDINARY_CLOUD_NAME
 
-Api key - 315951183766716
+Api key - YOUR_CLOUDINARY_API_KEY
 
-Api Secret - WBWwkWPzhNagf57c9csjt5aFaLE
+Api Secret - YOUR_CLOUDINARY_API_SECRET
