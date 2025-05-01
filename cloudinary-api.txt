@@ -1,5 +1,8 @@
-Cloud name - YOUR_CLOUDINARY_CLOUD_NAME
+// Replace this with your own Cloudinary configuration
+// UPLOAD YOUR OWN API KEYS HERE
 
-Api key - YOUR_CLOUDINARY_API_KEY
+Cloud name - UPLOAD YOUR OWN API
 
-Api Secret - YOUR_CLOUDINARY_API_SECRET
+Api key - UPLOAD YOUR OWN API
+
+Api Secret - UPLOAD YOUR OWN API
